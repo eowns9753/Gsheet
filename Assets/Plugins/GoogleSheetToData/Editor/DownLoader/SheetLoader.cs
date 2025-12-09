@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using SheetData.IO;
 using Unity.Plastic.Newtonsoft.Json;
 using Unity.Plastic.Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -10,27 +12,24 @@ namespace SheetData.Editor.DownLoader
 {
     internal class SheetLoader
     {
-        public static async Task Load(string sheetID, string sheetName)
+        public static async Task<SheetData> Load(string sheetID, SheetInfo sheetinfo)
         {
             // 1. 요청할 URL 생성
-            string targetUrl =  $"https://docs.google.com/spreadsheets/d/{sheetID}/gviz/tq?tqx=out:csv&sheet={sheetName}";
-            
+            //string targetUrl =  $"https://docs.google.com/spreadsheets/d/{sheetID}/export?format=csv&sheet={sheetName}";
+            string targetUrl = $"https://docs.google.com/spreadsheets/d/{sheetID}/export?format=csv&gid={sheetinfo.GID}";
             // 2. UnityWebRequest를 사용한 비동기 요청
             using (UnityWebRequest webRequest = UnityWebRequest.Get(targetUrl))
             {
-                // 요청이 완료될 때까지 대기
                 await webRequest.SendWebRequest();
-                // 3. 오류 처리
-                if (webRequest.result == UnityWebRequest.Result.ConnectionError ||
-                    webRequest.result == UnityWebRequest.Result.ProtocolError)
+                if (webRequest.result == UnityWebRequest.Result.ConnectionError || webRequest.result == UnityWebRequest.Result.ProtocolError)
                 {
                     Debug.LogError($"GoogleSheet Load Error: {webRequest.error}");
+                    return new SheetData("");
                 }
                 else
                 {
-                    // 4. 데이터 수신 및 파싱 시작
-                    string tsvData = webRequest.downloadHandler.text;
-                    //return SheetData
+                    string csvData = webRequest.downloadHandler.text;
+                    return new SheetData(csvData);
                 }
             }
         }
@@ -40,13 +39,12 @@ namespace SheetData.Editor.DownLoader
         /// </summary>
         /// <param name="sheetID"></param>
         /// <returns></returns>
-        internal static async Task<List<string>> GetSheetNames(string sheetID)
+        internal static async Task<List<SheetInfo>> GetSheetNames(string sheetID)
         {
-            List<string> result = new();
+            List<SheetInfo> result = new();
             string accessUrl = $"https://docs.google.com/spreadsheets/d/{sheetID}/edit";
             using (UnityWebRequest webRequest = UnityWebRequest.Get(accessUrl))
             {
-                // 브라우저처럼 위장하여 요청 (선택 사항이나 때때로 필요함)
                 webRequest.SetRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
                 await webRequest.SendWebRequest();
                 if (webRequest.result != UnityWebRequest.Result.Success)
@@ -55,18 +53,25 @@ namespace SheetData.Editor.DownLoader
                     return result;
                 }
                 string htmlContent = webRequest.downloadHandler.text;
-                
-                // Google Sheets HTML 소스 내에서 시트 정보를 포함하는 패턴을 찾습니다.
-                string replacement = "<div class=\"goog-inline-block docs-sheet-tab-caption\">";
-                string pattern = @"<div class=""goog-inline-block docs-sheet-tab-caption"">(.*?)<\/div>";
-                MatchCollection matches = Regex.Matches(htmlContent, pattern);
-                if (matches.Count == 0)
+                for (int i = 0; i < 100; i++)
                 {
-                    Debug.LogError("Couldn't find the sheet list pattern in the HTML. The Google Sheets web structure may have changed.");
-                    return result;
+                    int startIdx = htmlContent.LastIndexOf($"\"[{i},0,\\\"", StringComparison.Ordinal);
+                    if(startIdx < 0)
+                        break;
+                    var block = htmlContent.Substring(startIdx, 100);
+                    // 1. 첫 번째 값 (24006901) 추출을 위한 패턴
+                    string patternId = @",0,\\""([^""]+)";
+                    // 2. 두 번째 값 (ExampleSturct) 추출을 위한 패턴
+                    string patternName = @"\[\[0,0,\\""([^""]+)";
+                    // 매칭 실행
+                    Match matchId = Regex.Match(block, patternId);
+                    Match matchName = Regex.Match(block, patternName);
+                    result.Add(new SheetInfo()
+                    {
+                        SheetName = matchName.Groups[1].Value.Replace("\\", ""),
+                        GID = matchId.Groups[1].Value.Replace("\\","")
+                    });
                 }
-                foreach (Match match in matches)
-                    result.Add(match.Groups[1].Value);
             }
             return result;
         }

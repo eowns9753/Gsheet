@@ -31,13 +31,12 @@ namespace SheetData.Editor
         async void GenerateData(SheetDataSettingScriptable target)
         {
             await RefreshSheetNames(target);
-            for (int i = 0; i < target.SheetNames.Count; i++)
+            for (int i = 0; i < target.SheetInfos.Count; i++)
             {
-                await SheetLoader.Load(target.SheetID, target.SheetNames[i]);
+                var sheetData = await SheetLoader.Load(target.SheetID, target.SheetInfos[i]);
                 
 
             }
-           
         }
         
         async Task RefreshSheetNames(SheetDataSettingScriptable target)
@@ -45,8 +44,8 @@ namespace SheetData.Editor
             var names = await SheetLoader.GetSheetNames(target.SheetID);
             if (names.Count > 0)
             {
-                target.SheetNames.Clear();
-                target.SheetNames.AddRange(names);
+                target.SheetInfos.Clear();
+                target.SheetInfos.AddRange(names);
                 EditorUtility.SetDirty(target);
             }
         }

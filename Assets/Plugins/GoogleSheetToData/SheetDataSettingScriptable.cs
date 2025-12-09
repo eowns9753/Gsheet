@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using SheetData.IO;
 using UnityEngine;
 #if UNITY_EDITOR
 
@@ -18,12 +19,12 @@ namespace SheetData
         [SerializeField] private string _codeGeneratorPos = "Scripts/Generator";
         [SerializeField] private string _generatorNameSpace = "SheetData.Generator";
         [SerializeField] private string _sheetID = "1188AKPfAl2taqn6G-JDENJF-WeO_YA_gE4SRYzMRZBc";
-        [Space(20), SerializeField] private List<string> _sheetNames = new List<string>();
+        [Space(20), SerializeField] private List<SheetInfo> _sheetInfos = new List<SheetInfo>();
         
         public string SheetID => _sheetID;
         public string GeneratorNameSpace => _generatorNameSpace;
         public string CodeGeneratorPos => _codeGeneratorPos;
-        public List<string> SheetNames => _sheetNames;
+        public List<SheetInfo> SheetInfos => _sheetInfos;
         
         private void Awake()
         {
