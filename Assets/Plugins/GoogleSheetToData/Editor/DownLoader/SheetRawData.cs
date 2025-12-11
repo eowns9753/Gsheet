@@ -2,14 +2,19 @@
 
 namespace SheetData.Editor.DownLoader
 {
-    public class SheetData
+    public class SheetRawData
     {
         delegate void SplitRowStringForEachHandler(string str, int index);
         private int _columnCount;
+        private string _sheetName;
         private List<string[]> _rows;
         
-        public SheetData(string csvData)
+        public string SheetName => _sheetName;
+        public List<string[]> Rows => _rows;
+        
+        public SheetRawData(string sheetName, string csvData)
         {
+            _sheetName = sheetName;
             if (string.IsNullOrEmpty(csvData))
                 return;
             _rows = new();

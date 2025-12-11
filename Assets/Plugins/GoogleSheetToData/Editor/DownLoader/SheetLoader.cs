@@ -12,7 +12,7 @@ namespace SheetData.Editor.DownLoader
 {
     internal class SheetLoader
     {
-        public static async Task<SheetData> Load(string sheetID, SheetInfo sheetinfo)
+        public static async Task<SheetRawData> Load(string sheetID, SheetInfo sheetinfo)
         {
             // 1. 요청할 URL 생성
             //string targetUrl =  $"https://docs.google.com/spreadsheets/d/{sheetID}/export?format=csv&sheet={sheetName}";
@@ -24,12 +24,12 @@ namespace SheetData.Editor.DownLoader
                 if (webRequest.result == UnityWebRequest.Result.ConnectionError || webRequest.result == UnityWebRequest.Result.ProtocolError)
                 {
                     Debug.LogError($"GoogleSheet Load Error: {webRequest.error}");
-                    return new SheetData("");
+                    return new SheetRawData(sheetinfo.SheetName, "");
                 }
                 else
                 {
                     string csvData = webRequest.downloadHandler.text;
-                    return new SheetData(csvData);
+                    return new SheetRawData(sheetinfo.SheetName, csvData);
                 }
             }
         }
