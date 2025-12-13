@@ -1,57 +1,78 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using Rui.IO.Serialization;
 using Scriban;
 using SheetData.Editor.DownLoader;
+using SheetData.Editor.Utils;
+using UnityEngine;
 
 namespace SheetData.Editor.Generator
 {
-    public class TypeGenerator
+    internal static class TypeGenerator
     {
         private static readonly Template TEMPLATE = Template.Parse(Model.TemplateText);
-        public void Generator(SheetRawData sheetData, string path)
+
+        public static void Generator(SheetRawData sheetData, string generatorRootPath, string nameSpace)
         {
-            //sheetData   
-            var model = CreateModel(sheetData);
-            
-            // 템플릿 엔진에 데이터 주입
-            // 네이밍 컨벤션이 자동으로 매핑됩니다 (NamespaceName -> namespace_name)
+            if (!sheetData.IsValidation())
+                return;
+            var model = CreateModel(sheetData, nameSpace);
+
             string result = TEMPLATE.Render(model);
-            Console.WriteLine($"--- Generated {model.TypeName}.cs ---");
-            Console.WriteLine(result);
-            Console.WriteLine();
-            // 실제로 파일로 저장하려면 아래 주석 해제
-            // System.IO.File.WriteAllText($"{model.TypeName}.cs", result);
+            Debug.Log($"--- Generated {model.TypeName}.cs ---");
+            Debug.Log(result);
+            //System.IO.File.WriteAllText(IOUtils.GetSystemPath($"{generatorRootPath}/{model.TypeName}.cs"), result);
         }
 
-        private TypeModel CreateModel(SheetRawData data)
+        private static TypeModel CreateModel(SheetRawData data, string nameSpace)
         {
+            var properties = new List<PropertyModel>();
+            var unsings = new HashSet<string>();
             
-            /*// 예제 1: 클래스 생성
-            new TypeModel 
-            { 
-                NamespaceName = "Game.Data",
-                TypeKeyword = "class", 
-                TypeName = "PlayerStats",
-                Properties = new List<PropertyModel>
-                {
-                    new PropertyModel { Type = "int", Name = "Hp" },
-                    new PropertyModel { Type = "float", Name = "Speed" },
-                    new PropertyModel { Type = "string", Name = "Name" }
-                }
-            },
-            // 예제 2: 구조체 생성
-            new TypeModel 
-            { 
-                NamespaceName = "Game.Core",
-                TypeKeyword = "struct", 
-                TypeName = "Vector2D",
-                Properties = new List<PropertyModel>
-                {
-                    new PropertyModel { Type = "float", Name = "X" },
-                    new PropertyModel { Type = "float", Name = "Y" }
-                }
-            }*/
-            return null;
+            for (int i = 1; i < data.Rows[0].Length; i++)
+            {
+                var fieldData = GetField(data.Rows[0][i], unsings);
+                properties.Add(new PropertyModel(){ Name = fieldData.name, Type = fieldData.type});
+            }
+            
+            unsings.Add(typeof(NativeBinaryReader).Namespace);
+            unsings.Remove(null);
+            //properties
+            return new TypeModel
+            {
+                NamespaceName = nameSpace,
+                TypeKeyword = data.TypeKeyword,
+                TypeName = data.SheetName,
+                Properties = properties,
+                Usings = unsings.ToList()
+            };
+        }
+
+
+        private static (string type, string name) GetField(string content, HashSet<string> namespaceChain)
+        {
+            var f = content.Split(' ');
+            var typeString = f.First();
+            var typeName = f.Last();
+            if (typeString.Contains("[]")) //관리형배열
+            {
+                namespaceChain.Add(TypeFinder.Find(typeString.Replace("[]", ""))?.Namespace);
+                return (typeString, typeName);
+            }
+            else if (typeString.Contains(">")) //제너릭
+            {
+                int end = typeString.IndexOf(">", StringComparison.Ordinal);
+                int start = typeString.IndexOf("<", StringComparison.Ordinal);
+                string targetType = typeString.Substring(start, end - start);
+                namespaceChain.Add(TypeFinder.Find(targetType)?.Namespace);
+                return (typeString, typeName);
+            }
+            else
+            {
+                namespaceChain.Add(TypeFinder.Find(typeString)?.Namespace);
+                return (typeString, typeName);
+            }
         }
     }
     

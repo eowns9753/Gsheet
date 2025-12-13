@@ -7,10 +7,11 @@ namespace SheetData.Editor.Generator
         public string NamespaceName { get; set; }
         public string TypeKeyword { get; set; } // "class" 또는 "struct"
         public string TypeName { get; set; }
+        public List<string> Usings { get; set; }
         public List<PropertyModel> Properties { get; set; } = new List<PropertyModel>();
     }
 
-    public class PropertyModel
+    public struct PropertyModel
     {
         public string Type { get; set; }
         public string Name { get; set; }
@@ -19,7 +20,9 @@ namespace SheetData.Editor.Generator
     public class Model
     {
         public const string TemplateText = @"
-using System;
+{{~ for us in usings ~}}
+using {{ us }}
+{{~ end ~}}
 
 namespace {{ namespace_name }}
 {

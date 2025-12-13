@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
 namespace SheetData.Editor.DownLoader
 {
@@ -11,6 +13,7 @@ namespace SheetData.Editor.DownLoader
         
         public string SheetName => _sheetName;
         public List<string[]> Rows => _rows;
+        public string TypeKeyword => _rows.First().First().ToLower();
         
         public SheetRawData(string sheetName, string csvData)
         {
@@ -36,6 +39,22 @@ namespace SheetData.Editor.DownLoader
             }
         }
 
+        public bool IsValidation()
+        {
+            if (_rows.Count < 2)
+            {
+                Debug.LogError($"{SheetName}' row more than once");
+                return false;
+            }
+            if (_rows[0].Length < 3)
+            {
+                Debug.LogError($"{SheetName}' column more than two");
+                return false;
+            }
+
+            return true;
+        }
+        
         bool IsAnnotation(string strs) => strs.Length >= 2 && strs.Substring(0, 2) == "//";
 
         int SearchIgnoreColumns(string firstRow, List<int> ignoreColumIdxs)

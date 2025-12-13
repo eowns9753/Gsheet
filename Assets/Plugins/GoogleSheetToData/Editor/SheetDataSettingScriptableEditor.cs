@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Threading.Tasks;
 using SheetData.Editor.DownLoader;
+using SheetData.Editor.Generator;
 using SheetData.Editor.Utils;
 using UnityEditor;
 using UnityEngine;
@@ -34,7 +35,7 @@ namespace SheetData.Editor
             for (int i = 0; i < target.SheetInfos.Count; i++)
             {
                 var sheetData = await SheetLoader.Load(target.SheetID, target.SheetInfos[i]);
-                
+                TypeGenerator.Generator(sheetData, target.CodeGeneratorPos, target.GeneratorNameSpace);
 
             }
         }
