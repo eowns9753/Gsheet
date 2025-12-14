@@ -21,24 +21,25 @@ namespace SheetData.Editor.Generator
         {
             if(_cachedTypes.TryGetValue(typeName, out Type result))
                 return result;
-            
-            if (result == null)
-            {//Deep find
-                
-                var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-                foreach (var assembly in assemblies)
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            foreach (var assembly in assemblies)
+            {
+                if (!assembly.IsDynamic)
                 {
-                    if (!assembly.IsDynamic && assembly.Location.Contains("Assets"))
+                    bool isTarget = assembly.Location.Contains("Assets") || assembly.Location.Contains("ScriptAssemblies");
+                    if (isTarget)
                     {
                         var  types = assembly.ExportedTypes;
                         foreach (var type in types)
                         {
                             if (type.Name == typeName)
+                            {
+                                _cachedTypes.Add(typeName, type);
                                 return type;
+                            }
                         }
-                    }
-                    
-                }
+                    }  
+                }  
             }
 
             return result;

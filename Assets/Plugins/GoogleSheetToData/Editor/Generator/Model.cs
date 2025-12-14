@@ -31,9 +31,12 @@ namespace {{ namespace_name }}
         {{~ for prop in properties ~}}
         public {{ prop.type }} {{ prop.name }} { get; set; }
         {{~ end ~}}
+
         public {{ type_name }}() 
         {
         }
+
+        
     }
 }
 ";

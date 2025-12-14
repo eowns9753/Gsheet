@@ -36,7 +36,8 @@ namespace SheetData.Editor
             {
                 var sheetData = await SheetLoader.Load(target.SheetID, target.SheetInfos[i]);
                 TypeGenerator.Generator(sheetData, target.CodeGeneratorPos, target.GeneratorNameSpace);
-
+                AssetDatabase.Refresh();
+                
             }
         }
         

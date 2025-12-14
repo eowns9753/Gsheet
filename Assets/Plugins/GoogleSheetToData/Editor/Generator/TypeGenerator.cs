@@ -5,6 +5,7 @@ using Rui.IO.Serialization;
 using Scriban;
 using SheetData.Editor.DownLoader;
 using SheetData.Editor.Utils;
+using UnityEditor;
 using UnityEngine;
 
 namespace SheetData.Editor.Generator
@@ -20,9 +21,8 @@ namespace SheetData.Editor.Generator
             var model = CreateModel(sheetData, nameSpace);
 
             string result = TEMPLATE.Render(model);
-            Debug.Log($"--- Generated {model.TypeName}.cs ---");
-            Debug.Log(result);
-            //System.IO.File.WriteAllText(IOUtils.GetSystemPath($"{generatorRootPath}/{model.TypeName}.cs"), result);
+            System.IO.File.WriteAllText(IOUtils.GetSystemPath($"{generatorRootPath}/{model.TypeName}.cs"), result);
+           
         }
 
         private static TypeModel CreateModel(SheetRawData data, string nameSpace)
