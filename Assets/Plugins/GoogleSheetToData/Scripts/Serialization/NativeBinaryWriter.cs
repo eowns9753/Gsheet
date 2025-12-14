@@ -54,7 +54,7 @@ namespace Rui.IO.Serialization
         }
         
         /// <summary> 구조체로 구성된 데이터를 작성합니다 </summary>
-        public void Write<T>(T data,int customPosition = -1) where T : unmanaged
+        public void Write<T>(T data, int customPosition = -1) where T : unmanaged
         {
             int size = UnsafeUtility.SizeOf<T>();
             (*(T*)Position(size, customPosition)) = data;

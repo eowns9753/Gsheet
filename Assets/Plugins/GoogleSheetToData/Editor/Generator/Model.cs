@@ -11,6 +11,13 @@ namespace SheetData.Editor.Generator
         public List<PropertyModel> Properties { get; set; } = new List<PropertyModel>();
     }
 
+    public class EnumModel
+    {
+        public string NamespaceName { get; set; }
+        public string TypeName { get; set; }
+        public List<string> Enumnames { get; set; }
+    }
+    
     public struct PropertyModel
     {
         public string Type { get; set; }
@@ -19,24 +26,20 @@ namespace SheetData.Editor.Generator
     
     public class Model
     {
-        public const string TemplateText = @"
-{{~ for us in usings ~}}
-using {{ us }}
+        public const string Template_Class = @"{{~ for us in usings ~}}
+using {{ us }};
 {{~ end ~}}
+using MemoryPack;
 
 namespace {{ namespace_name }}
 {
-    public {{ type_keyword }} {{ type_name }}
+    [MemoryPackable]
+    public partial {{ type_keyword }} {{ type_name }}
     {
         {{~ for prop in properties ~}}
-        public {{ prop.type }} {{ prop.name }} { get; set; }
+        public {{ prop.type }} {{ prop.name }};
         {{~ end ~}}
 
-        public {{ type_name }}() 
-        {
-        }
-
-        
     }
 }
 ";

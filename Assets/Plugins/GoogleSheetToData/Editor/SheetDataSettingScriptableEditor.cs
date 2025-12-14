@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Text;
 using System.Threading.Tasks;
 using SheetData.Editor.DownLoader;
 using SheetData.Editor.Generator;
@@ -32,13 +33,19 @@ namespace SheetData.Editor
         async void GenerateData(SheetDataSettingScriptable target)
         {
             await RefreshSheetNames(target);
+            string generatorCode = "";
             for (int i = 0; i < target.SheetInfos.Count; i++)
             {
                 var sheetData = await SheetLoader.Load(target.SheetID, target.SheetInfos[i]);
-                TypeGenerator.Generator(sheetData, target.CodeGeneratorPos, target.GeneratorNameSpace);
-                AssetDatabase.Refresh();
-                
+                TypeGenerator generator = new TypeGenerator();
+                generatorCode = generator.Generator(sheetData, target.GeneratorNameSpace);
+                if (generatorCode != "")
+                {
+                    string path = IOUtils.GetSystemPath($"{target.CodeGeneratorPos}/{sheetData.SheetName}.cs");
+                    IOUtils.SaveFile(path, Encoding.UTF8.GetBytes(generatorCode)); 
+                }
             }
+            AssetDatabase.Refresh();
         }
         
         async Task RefreshSheetNames(SheetDataSettingScriptable target)

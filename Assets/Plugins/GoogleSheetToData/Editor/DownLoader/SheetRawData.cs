@@ -41,6 +41,8 @@ namespace SheetData.Editor.DownLoader
 
         public bool IsValidation()
         {
+            if (_rows.Count == 0)
+                return false;
             if (_rows.Count < 2)
             {
                 Debug.LogError($"{SheetName}' row more than once");

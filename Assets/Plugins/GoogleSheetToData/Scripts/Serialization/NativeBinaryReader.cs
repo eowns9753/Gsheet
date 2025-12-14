@@ -6,6 +6,7 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using UnityEngine;
+using Object = System.Object;
 
 namespace Rui.IO.Serialization
 {
@@ -58,18 +59,27 @@ namespace Rui.IO.Serialization
         {
             *_position += size;
         }
-        
+
         /// <summary> T에 해당하는 형식으로 토큰값을 읽어 반환</summary>
         public T Read<T>() where T : unmanaged
         {
-            unsafe
-            {
-                int size = UnsafeUtility.SizeOf<T>();
-                T result = *(T*)GetPtr();
-                AddPosition(size);
-                return result;
-            }
+            int size = UnsafeUtility.SizeOf<T>();
+            T result = *(T*)GetPtr();
+            AddPosition(size);
+            return result;
         }
+        
+        /// <summary> T에 해당하는 형식으로 토큰값을 읽어 반환</summary>
+        public T ReadObject<T>() 
+        {
+            string a;
+            
+            /*int size = UnsafeUtility.SizeOf<T>();
+            T result = *(T*)GetPtr();
+            AddPosition(size);*/
+            return default;
+        }
+        
 
         /// <summary> 토큰에 해당하는 메모리를 원형으로 사용한 변수 리스트를 반환합니다. 읽기전용</summary>
         public UnsafeList<T> ReadArray_Ref<T>() where T : unmanaged
