@@ -5,11 +5,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Unity.Burst;
 using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-using UnityEngine;
 
 namespace Rui.IO.Serialization
 {
@@ -22,109 +17,99 @@ namespace Rui.IO.Serialization
     /// </summary>
     public unsafe struct NativeBinaryWriter : IDisposable
     {
-        [NativeDisableUnsafePtrRestriction] private UnsafeList<byte>* _binary;
+        private const uint MAXCAPACITY = uint.MaxValue;
+        private const int CacheLineSize = 64;
+        
+        private IntPtr _array;
+        private uint _length;
+        private uint _capacity;
 
-        public int Length => _binary->Length;
-
-        public NativeBinaryWriter(int capacity, Allocator allocator)
+        public uint Length => _length;
+        public uint Position => _length;
+        
+        public NativeBinaryWriter(int capacity)
         {
-            _binary = UnsafeList<byte>.Create(capacity, allocator);
+            _array = Marshal.AllocHGlobal(new IntPtr(capacity));
+            _capacity = (uint)capacity;
+            _length = 0;
+        }
+        
+        public NativeBinaryWriter(uint capacity)
+        {
+            _array = Marshal.AllocHGlobal(new IntPtr(capacity));
+            _capacity = capacity;
+            _length = 0;
         }
 
-        public void* GetPtr()
-        {
-            return _binary->Ptr;
-        }
+        public void* GetPtr() => _array.ToPointer();
 
-        public int GetNowPosition()
+        private void* W(uint byteLength)
         {
-            return Length;
-        }
-
-        private void* Position(int byteLength,int customPosition = -1)
-        {
-            if (customPosition < 0)
+            if (_capacity < (byteLength + _length))
             {
-                int pos = _binary->Length;
-                _binary->Length += byteLength;
-                return (byte*)IntPtr.Add((IntPtr)_binary->Ptr, pos);
+                uint t_capacity = _capacity + (_capacity >> 1);
+                t_capacity += t_capacity % CacheLineSize;
+                if (t_capacity >= MAXCAPACITY)
+                    throw new OutOfMemoryException();
+                _array = Marshal.ReAllocHGlobal(_array, new IntPtr(t_capacity));
+                _capacity = t_capacity;
             }
-            else
+            uint pos = _length;
+            _length += byteLength;
+            return (byte*)_array + pos;
+        }
+        
+        private void* W(int byteLength) => W((uint)byteLength);
+
+        
+        /// <summary> 구조체로 구성된 데이터를 작성합니다 </summary>
+        public void Write<T>(T data) where T : unmanaged
+        {
+            int size =  Unsafe.SizeOf<T>();
+            (*(T*)W(size)) = data;
+        }
+
+        public void Write(IntPtr ptr, uint len, uint size)
+        {
+            uint byteLen = len * size;
+            Write(byteLen);
+            void* destPtr = W(byteLen);
+            void* srcPtr = (void*)(ptr);
+            Unsafe.CopyBlock(destPtr, srcPtr, byteLen);
+        }
+        
+        /// <summary> 1byte로 채워지는 여유 공간을 작성합니다</summary>
+        public void WritePadding(int byteLen)
+        {
+            void* destPtr =  W(byteLen);
+            Unsafe.InitBlock(destPtr, 0, (uint)byteLen);
+        }
+
+        public void Write<T>(T[] data) where T : unmanaged
+        {
+            int byteLen = Unsafe.SizeOf<T>() * data.Length;
+            Write(byteLen); //add SizeData
+            void* destPtr = W(byteLen);
+            fixed (void* srcPtr = &data[0])
             {
-                return (byte*)IntPtr.Add((IntPtr)_binary->Ptr, customPosition);
+                Unsafe.CopyBlock(destPtr, srcPtr, (uint)byteLen);
             }
         }
         
-        /// <summary> 구조체로 구성된 데이터를 작성합니다 </summary>
-        public void Write<T>(T data, int customPosition = -1) where T : unmanaged
+        public void Write<T>(List<T> data) where T : unmanaged
         {
-            int size = UnsafeUtility.SizeOf<T>();
-            (*(T*)Position(size, customPosition)) = data;
-        }
-
-        /// <summary> 구조체로 구성된 NativeList<T> 을 빠르게 작성합니다 </summary>
-        public void Write<T>(NativeArray<T> data,int customPosition =-1) where T : unmanaged
-        {
-            int size = UnsafeUtility.SizeOf<T>() * data.Length;
-            Write(size); //add SizeData
-            void* destPtr = Position(size, customPosition);
-            void* srcPtr = (void*)((IntPtr)data.GetUnsafePtr());
-            UnsafeUtility.MemCpy(destPtr, srcPtr, size);
-        }
-
-        /// <summary> 구조체로 구성된 UnsafeList<T> 을 빠르게 작성합니다 </summary>
-        public void Write<T>(UnsafeList<T> data,int customPosition=-1) where T : unmanaged
-        {
-            int size = UnsafeUtility.SizeOf<T>() * data.Length;
-            Write(size); //add SizeData
-            void* destPtr = Position(size, customPosition); 
-            void* srcPtr = (void*)((IntPtr)data.Ptr);
-            UnsafeUtility.MemCpy(destPtr, srcPtr, size);
-        }
-
-        /// <summary> 0으로 채워지는 여유 공간을 작성합니다</summary>
-        public void WritePadding(int size,int customPosition=-1)
-        {
-            void* destPtr =  Position(size, customPosition);
-            UnsafeUtility.MemSet(destPtr, 0, size);
-        }
-
-        #region managermentCode
-
-        /// <summary>
-        /// 배열을 바이너리에 작성 / 버스트미지원
-        /// NativeContainer 사용하면 버스트 사용 가능 </summary>
-        [BurstDiscard]
-        public void Write<T>(T[] data,int customPosition = -1) where T : unmanaged
-        {
-            int size = UnsafeUtility.SizeOf<T>() * data.Length;
-            Write(size); //add SizeData
-            void* destPtr = Position(size, customPosition);
-            fixed (void* srcPtr = &data[0])
+            GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
+            void* dataPtr = (void*)handle.AddrOfPinnedObject();
+            int size = sizeof(T) * data.Count;
+            Write(size); 
+            void* destPtr = W(size);
+            Unsafe.CopyBlock(dataPtr, destPtr, (uint)size);
+            if (handle.IsAllocated)
             {
-                UnsafeUtility.MemCpy(destPtr, srcPtr, size);
+                handle.Free();
             }
         }
-
-        /// <summary>
-        /// List<T> 바이너리에 작성 / 버스트미지원
-        /// NativeContainer 함수 사용하면 버스트 사용 가능 </summary>
-        [BurstDiscard]
-        public void Write<T>(List<T> data,int customPosition = -1) where T : unmanaged
-        {
-            void* dataPtr = UnsafeUtility.PinGCObjectAndGetAddress(data, out var gcHandle);
-            int size = UnsafeUtility.SizeOf<T>() * data.Count;
-            Write(size); //add SizeData
-            void* destPtr = Position(size, customPosition);
-            UnsafeUtility.MemCpy(destPtr, dataPtr, size);
-            UnsafeUtility.ReleaseGCObject(gcHandle);
-        }
-
-
-        /// <summary>
-        /// string을 바이너리에 작성 / 버스트미지원
-        /// 문자열 최대길이가 고정일 경우 FixedString64Bytes 권장</summary>
-        [BurstDiscard]
+        
         public void Write(string str)
         {
             if(string.IsNullOrEmpty(str))
@@ -135,13 +120,31 @@ namespace Rui.IO.Serialization
                 Write(bytes);
             }
         }
+        
+        #region T1....T10
 
+        /*/// <summary> 구조체로 구성된 데이터를 작성합니다 </summary>
+        public void Write<T1, T2>(T1 _1, T2 _2) where T1 : unmanaged where T2 : unmanaged
+        {
+            Unsafe.WriteUnaligned(); <<<이거로 대체
+            (*(T1*)W(Unsafe.SizeOf<T1>())) = _1;
+            (*(T2*)W(Unsafe.SizeOf<T2>())) = _2;
+        }
+        
+        /// <summary> 구조체로 구성된 데이터를 작성합니다 </summary>
+        public void Write<T1, T2, T3>(T1 _1, T2 _2, T3 _3) where T1 : unmanaged
+        {
+            (*(T1*)W(Unsafe.SizeOf<T1>())) = _1;
+            (*(T2*)W(Unsafe.SizeOf<T2>())) = _2;
+            (*(T3*)W(Unsafe.SizeOf<T3>())) = _3;
+        }*/
 
         #endregion
         
         public void Dispose()
         {
-            UnsafeList<byte>.Destroy(_binary);
+            Marshal.FreeHGlobal(_array);
+            _length = _capacity = 0;
         }
     }
 }

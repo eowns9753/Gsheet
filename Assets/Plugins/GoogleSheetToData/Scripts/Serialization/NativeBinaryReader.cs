@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -22,6 +23,7 @@ namespace Rui.IO.Serialization
         #region constructor
         public NativeBinaryReader(NativeArray<byte> datas,Allocator allocator)
         {
+            
             _array = datas.GetUnsafePtr();
             _position = AllocatorManager.Allocate<int>(allocator);
             (*_position) = 0;

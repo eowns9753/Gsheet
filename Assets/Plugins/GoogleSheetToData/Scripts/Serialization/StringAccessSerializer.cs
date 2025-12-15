@@ -23,10 +23,10 @@ namespace Rui.IO.Serialization
             _accessList->Add(access);
         }
 
-        public void Write(NativeBinaryWriter writer)
+        /*public void Write(NativeBinaryWriter writer)
         {
             HashSet<StringAccess> hashSet = new();
-            var headerPos = writer.GetNowPosition();
+            var headerPos = writer.Position;
             writer.WritePadding(4);
             int count = 0;
             var list = *_accessList;
@@ -44,7 +44,7 @@ namespace Rui.IO.Serialization
                 }
             }
             writer.Write(count,headerPos);
-        }
+        }*/
 
         /*public void Read(NativeBinaryReader reader)
         {

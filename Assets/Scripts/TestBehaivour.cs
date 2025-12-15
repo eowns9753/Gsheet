@@ -60,7 +60,7 @@ namespace DefaultNamespace
 
             int capacity = cycle * (Marshal.SizeOf<ExampleSturct>() + 8);
             var _memoryPackWriter = new ArrayBufferWriter<byte>(capacity); // 1MB 초기 용량
-            var _nativeBuffer = new NativeBinaryWriter(capacity, Allocator.Persistent);
+            var _nativeBuffer = new NativeBinaryWriter(capacity);
             
             await Task.Delay(1000);
             WriteTofuMem(cycle, _nativeBuffer, new ExampleSturct());
@@ -124,7 +124,7 @@ namespace DefaultNamespace
         private void ReadTofu(int count)
         {
             ExampleSturct strudummy = new ();
-            NativeBinaryWriter writer = new NativeBinaryWriter(512, Allocator.Persistent);
+            NativeBinaryWriter writer = new NativeBinaryWriter(512);
             writer.Write(strudummy.direction);
             writer.Write(strudummy.speed);
             writer.Write(strudummy.nativeArr);
