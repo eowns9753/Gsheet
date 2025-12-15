@@ -40,7 +40,7 @@ namespace Rui.IO.Serialization
             _position = AllocatorManager.Allocate<int>(allocator);
             (*_position) = 0;
         }
-
+        
         #endregion
         
         public unsafe IntPtr GetIntPtr()
@@ -58,6 +58,11 @@ namespace Rui.IO.Serialization
         public void AddPosition(int size)
         {
             *_position += size;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetPosition(int pos)
+        {
+            *_position = pos;
         }
 
         /// <summary> T에 해당하는 형식으로 토큰값을 읽어 반환</summary>

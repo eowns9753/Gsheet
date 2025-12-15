@@ -13,6 +13,8 @@ using UnityEngine;
 
 namespace Rui.IO.Serialization
 {
+    ///일단 라이브러리화 하고 추후 프로토버퍼처럼 백/프 동기화 지원
+    /// 재미니를통해 잠재적 위험요소 제거해가면서 개선작업 후 배포
     /// <summary>
     /// 변수를 바이너리 데이터로 변경하여 작성하는데 사용되는 구조체 입니다
     /// 버스트 기능을 지원합니다. / 작성완료시 Dispose 필요
@@ -125,7 +127,7 @@ namespace Rui.IO.Serialization
         [BurstDiscard]
         public void Write(string str)
         {
-            if(str.Length == 0)
+            if(string.IsNullOrEmpty(str))
                 Write(0);
             else
             {

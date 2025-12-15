@@ -79,7 +79,7 @@ namespace SheetData.Editor
             
             if (GUILayout.Button("StartDebug"))
             {
-                RefreshSheetNames(scriptable);
+                _ = RefreshSheetNames(scriptable);
                 scriptable.StartDebug();
             }
         }

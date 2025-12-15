@@ -1,10 +1,12 @@
 ﻿using System.IO;
+using MemoryPack;
 
 namespace DefaultNamespace
 {
-    public class StructNameTest
+    [MemoryPackable]
+    public partial class StructNameTest
     {
-        private BinaryReader a;
+        private int a;
         
     }
 }

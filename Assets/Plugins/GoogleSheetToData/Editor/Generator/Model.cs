@@ -37,7 +37,7 @@ namespace {{ namespace_name }}
     public partial {{ type_keyword }} {{ type_name }}
     {
         {{~ for prop in properties ~}}
-        public {{ prop.type }} {{ prop.name }};
+        public {{ prop.type }} {{ prop.name }} { get; private set; }
         {{~ end ~}}
 
     }
