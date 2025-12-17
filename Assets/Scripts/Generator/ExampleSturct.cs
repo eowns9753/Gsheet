@@ -8,7 +8,7 @@ using MemoryPack;
 namespace SheetData.Generator
 {
     [MemoryPackable]
-    public partial struct ExampleSturct
+    public partial class ExampleSturct
     {
         public Vector2 direction { get; set; }
         public float speed { get; set; }
@@ -17,6 +17,8 @@ namespace SheetData.Generator
         public float asdasd { get; set; }
 
         public string aaaa { get; set; }
+
+        public Vector2[] VecArr { get; set; } = new Vector2[10];
         //public StructNameTest a { get; private set; }
 
     }

@@ -163,3 +163,28 @@ namespace Rui.IO.Serialization
         }
     }
 }
+
+/*// 읽기용 커서 (별도 관리된다고 가정)
+long _readPos = 0; 
+
+[MethodImpl(MethodImplOptions.AggressiveInlining)]
+private void* BeginRead(uint byteLength)
+{
+    // 1. 쓰기 때와 똑같은 규칙으로 정렬 단위 결정
+    uint alignment = byteLength >= 8 ? 8 : byteLength;
+    if ((alignment & (alignment - 1)) != 0) alignment = 1;
+
+    long currentPos = _readPos;
+
+    // 2. 패딩을 포함한 시작 위치 계산 (점프!)
+    long alignedPos = (currentPos + (alignment - 1)) & ~(alignment - 1);
+    
+    // 3. 유효성 검사 (데이터가 충분한지)
+    if (alignedPos + byteLength > _length) throw new IndexOutOfRangeException();
+
+    // 4. 읽기 커서 업데이트 (패딩 + 데이터 길이만큼 전진)
+    _readPos = alignedPos + byteLength;
+
+    // 5. 정렬된 위치의 포인터 반환
+    return (byte*)_array + alignedPos;
+}*/

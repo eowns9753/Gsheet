@@ -2,13 +2,7 @@
 {
     public interface INativeBinaryable
     {
-        void NativeWrite(NativeBinaryWriter writer);
-        void NativeRead(NativeBinaryReader reader);
-    }
-
-    public interface INativeBinaryWithStringAccess
-    {
-        void NativeWrite(NativeBinaryWriter writer,StringAccessSerializer serializer);
-        void NativeRead(NativeBinaryReader reader,StringAccessSerializer serializer);
+        protected internal void OnNativeWrite(NativeBinaryWriter writer);
+        protected internal void OnNativeRead(NativeBinaryReader reader);
     }
 }
