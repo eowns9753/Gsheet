@@ -23,7 +23,7 @@ namespace DefaultNamespace
         }
     }
     
-    public struct TestStruct : INativeBinaryable
+    public class TestStruct : INativeBinaryable
     {
         public TestStructChild child; //26
         public Vector2 vec; //34
@@ -40,7 +40,7 @@ namespace DefaultNamespace
 
         void INativeBinaryable.OnNativeRead(NativeBinaryReader reader)
         {
-            
+            reader.Read(out child, out vec, out integer, out fl, out lon, out deci, out f3);
         }
     }
     
@@ -48,9 +48,21 @@ namespace DefaultNamespace
     {
         public void Start()
         {
-            var datas = Write(1);
-            
+            var datas = Write(5);
+            Read(datas);
+           
+        }
 
+        public void Read(byte[] datas)
+        {
+            NativeBinaryReader reader = new NativeBinaryReader(datas);
+            reader.Read(out int count);
+            for (int i = 0; i < count; i++)
+            {
+                TestStruct nStruct = new TestStruct();
+                reader.ReadRef(nStruct);
+            }
+            reader.Dispose();
         }
 
         public byte[] Write(int count)
@@ -71,8 +83,8 @@ namespace DefaultNamespace
             NativeBinaryWriter writer = new NativeBinaryWriter(128);
             writer.Write(count);
             for (int i = 0; i < structs.Length; i++)
-                writer.Write(structs[i]);
-            var result = writer.ToSpan().ToArray();
+                writer.WriteRef(structs[i]);
+            var result = writer.ToArray();
             writer.Dispose();
             return result;
             //writer

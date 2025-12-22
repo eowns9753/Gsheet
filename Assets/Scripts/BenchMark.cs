@@ -11,19 +11,32 @@ using Debug = UnityEngine.Debug;
 namespace DefaultNamespace
 {
     [MemoryPackable]
-    public partial class BenchExample
+    public partial class BenchExample : INativeBinaryable
     {
-        public Vector2 direction { get; set; }
-        public float speed { get; set; }
-        public FixedString32Bytes testfxStr { get; set; }
-        public FixedString32Bytes testfxStr2 { get; set; }
-        public float asdasd { get; set; }
+        public Vector2 direction;
+        public float speed;
+        public FixedString32Bytes testfxStr;
+        public FixedString32Bytes testfxStr2;
+        public float asdasd;
 
-        public string aaaa { get; set; }
+        public string aaaa;
 
-        public Vector2[] VecArr { get; set; } = new Vector2[10];
+        public Vector2[] VecArr = new Vector2[10];
         //public StructNameTest a { get; private set; }
 
+        void INativeBinaryable.OnNativeWrite(NativeBinaryWriter writer)
+        {
+            writer.Write(direction, speed, testfxStr, testfxStr2, asdasd);
+            writer.Write(aaaa);
+            writer.Write(VecArr);
+        }
+
+        void INativeBinaryable.OnNativeRead(NativeBinaryReader reader)
+        {
+            reader.Read(out direction, out speed, out testfxStr, out testfxStr2, out asdasd);
+            reader.Read(out aaaa);
+            reader.Read(out VecArr);
+        }
     }
     
     public class BenchMark
@@ -34,6 +47,7 @@ namespace DefaultNamespace
             Debug.Log("Test start");
             int cycle = 300000;
 
+            
             var _memoryPackWriter = new ArrayBufferWriter<byte>(64); // 1MB 초기 용량
             var _nativeBuffer = new NativeBinaryWriter(64);
             
@@ -60,12 +74,7 @@ namespace DefaultNamespace
         {
             stp.Restart();
             for (int i = 0; i < count; i++)
-            {
-                writer.Write(b.direction, b.speed, b.testfxStr, b.testfxStr2, b.asdasd);
-                writer.Write(b.aaaa);
-                writer.Write(b.VecArr);
-            }
-
+                writer.WriteRef(b);
             stp.Stop();
             Debug.Log($"{nameof(WriteTofuMem)} {count:N0} cycle({writer.Length/1000000} MB), {stp.ElapsedMilliseconds} ms");
         }
@@ -95,26 +104,24 @@ namespace DefaultNamespace
         
         private void ReadTofu(int count)
         {
-            BenchExample strudummy = new ();
+            BenchExample strudummy = new()
+            {
+                direction =  Vector2.down,
+                speed = 10,
+                aaaa = "aasdasdasd",
+                asdasd = 0.5f,
+                VecArr = new Vector2[10]
+            };
             NativeBinaryWriter writer = new NativeBinaryWriter(512);
-            writer.Write(strudummy.direction);
-            writer.Write(strudummy.speed);
-            writer.Write(strudummy.testfxStr);
-            writer.Write(strudummy.testfxStr2);
-            writer.Write(strudummy.asdasd);
-            writer.Write(strudummy.aaaa);
-            NativeBinaryReader reader = new NativeBinaryReader(writer, Allocator.Persistent);
+            writer.WriteRef(strudummy);
+            
+            NativeBinaryReader reader = new NativeBinaryReader(writer.ToPtr());
             
             stp.Restart();
             for (int i = 0; i < count; i++)
             {
                 BenchExample stru = new ();
-                stru.direction = reader.Read<Vector2>();
-                stru.speed = reader.Read<float>();
-                stru.testfxStr = reader.Read<FixedString32Bytes>();
-                stru.testfxStr2 = reader.Read<FixedString32Bytes>();
-                stru.asdasd = reader.Read<float>();
-                stru.aaaa = reader.ReadString();
+                reader.ReadRef(stru);
                 reader.SetPosition(0);
             }
             stp.Stop();

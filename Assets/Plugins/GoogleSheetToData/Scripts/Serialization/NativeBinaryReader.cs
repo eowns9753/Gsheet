@@ -1,190 +1,210 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Unity.Burst;
-using Unity.Collections;
+using System.Text;
 using Unity.Collections.LowLevel.Unsafe;
-using Unity.Jobs;
-using UnityEngine;
-using Object = System.Object;
 
 namespace Rui.IO.Serialization
 {
-    /// <summary>
-    /// 바이너리 데이터를 읽는데 사용되는 구조체입니다.
-    /// 버스트 기능을 지원합니다. 
-    /// </summary>
-    public unsafe struct NativeBinaryReader
+    public unsafe class NativeBinaryReader : IDisposable
     {
-        private void* _array;
-        private int* _position;
-        
+        private IntPtr _array;
+        private long _position;
+        private GCHandle _handle;
+
         #region constructor
-        public NativeBinaryReader(NativeArray<byte> datas,Allocator allocator)
+        public NativeBinaryReader(NativePointer<byte> span)
         {
-            
-            _array = datas.GetUnsafePtr();
-            _position = AllocatorManager.Allocate<int>(allocator);
-            (*_position) = 0;
-        }
-
-        public NativeBinaryReader(NativeList<byte> datas, Allocator allocator)
-        {
-            _array = datas.GetUnsafePtr();
-            _position = AllocatorManager.Allocate<int>(allocator);
-            (*_position) = 0;
-        }
-
-        public NativeBinaryReader(NativeBinaryWriter writer, Allocator allocator)
-        {
-            _array = (void*)writer.GetPtr();
-            _position = AllocatorManager.Allocate<int>(allocator);
-            (*_position) = 0;
+            _array = span;
+            _position = 0;
         }
         
+        public NativeBinaryReader(IntPtr binaryData)
+        {
+            _array = binaryData;
+            _position = 0;
+        }
+
+        public NativeBinaryReader(byte[] binaryData)
+        {
+            _handle = GCHandle.Alloc(binaryData, GCHandleType.Pinned);
+            _array = _handle.AddrOfPinnedObject();
+        }
+        
+        ~NativeBinaryReader()
+        {
+            _dispose();
+        }
         #endregion
-        
-        public unsafe IntPtr GetIntPtr()
+
+        public void SetPosition(long position)
         {
-            return (IntPtr)_array + *_position;
+            _position = position;
         }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe void* GetPtr()
-        {
-            return (void*)((IntPtr)_array + *_position);
-        }
+        #region BeginRead
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void AddPosition(int size)
-        {
-            *_position += size;
-        }
+        public void* BeginRead(int byteLength) => BeginRead((uint)byteLength);
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetPosition(int pos)
+        public void* BeginRead(uint byteLength)
         {
-            *_position = pos;
+            // 1. 쓰기 때와 똑같은 규칙으로 정렬 단위 결정
+            uint alignment = byteLength >= 8 ? 8 : byteLength;
+            if ((alignment & (alignment - 1)) != 0) alignment = 1;
+            long currentPos = _position;
+            // 2. 패딩을 포함한 시작 위치 계산 (점프!)
+            long alignedPos = (currentPos + (alignment - 1)) & ~(alignment - 1);
+            /*// 3. 유효성 검사 (데이터가 충분한지)
+            if (alignedPos + byteLength > length)
+                throw new IndexOutOfRangeException();*/
+            _position = alignedPos + byteLength;
+            return (byte*)_array + alignedPos;
         }
 
-        /// <summary> T에 해당하는 형식으로 토큰값을 읽어 반환</summary>
-        public T Read<T>() where T : unmanaged
-        {
-            int size = UnsafeUtility.SizeOf<T>();
-            T result = *(T*)GetPtr();
-            AddPosition(size);
-            return result;
-        }
-        
-        /// <summary> T에 해당하는 형식으로 토큰값을 읽어 반환</summary>
-        public T ReadObject<T>() 
-        {
-            string a;
-            
-            /*int size = UnsafeUtility.SizeOf<T>();
-            T result = *(T*)GetPtr();
-            AddPosition(size);*/
-            return default;
-        }
-        
+        #endregion
 
-        /// <summary> 토큰에 해당하는 메모리를 원형으로 사용한 변수 리스트를 반환합니다. 읽기전용</summary>
-        public UnsafeList<T> ReadArray_Ref<T>() where T : unmanaged
+        public void Read<T1>(out T1 _1) where T1 : unmanaged
         {
-            int size = Read<int>();
-            int typeSize = UnsafeUtility.SizeOf<T>();
-            int len = size / typeSize;
-            var result2 = new UnsafeList<T>((T*)GetPtr(), len);
-            AddPosition(size);
-            return result2;
+            _1 = *(T1*)BeginRead(Unsafe.SizeOf<T1>());
         }
 
-        /// <summary> list에 복사  </summary>
-        public void ReadUnsafeList<T>(ref UnsafeList<T> list) where T : unmanaged
+        public void ReadPadding(int byteLen)
         {
-            int size = Read<int>();
-            list.Resize(size/ UnsafeUtility.SizeOf<T>());
-            UnsafeUtility.MemCpy(list.Ptr, GetPtr(), size);
-            AddPosition(size);
+            BeginRead(byteLen);
         }
 
-        /// <summary> 토큰에 해당하는 메모리를 복사하여 생성한 변수 리스트를 반환합니다.  </summary>
-        public void ReadNativeList<T>(ref NativeList<T> list) where T : unmanaged
+        /// <summary> 반환 Span값은 참조하지말고 복사해서 사용하세요 </summary>
+        public void Read<T>(out ReadOnlySpan<T> result) where T : unmanaged
         {
-            int size = Read<int>();
-            list.ResizeUninitialized(size / UnsafeUtility.SizeOf<T>());
-            UnsafeUtility.MemCpy(list.GetUnsafePtr(), GetPtr(), size);
-            AddPosition(size);
+            Read(out int length);
+            int byteLen = length * Unsafe.SizeOf<T>();
+            void* dataPtr = BeginRead(byteLen);
+            result = new ReadOnlySpan<T>(dataPtr, byteLen);
         }
 
-        /// <summary> 0으로 채워진 여유공간을 스킵합니다 </summary>
-        public void ReadPadding(int size)
+        public void Read<T>(out T[] result) where T : unmanaged
         {
-            AddPosition(size);
-        }
-        
-        #region managermentCode
-        /// <summary> 관리되는 Array<T>를 반환합니다 / 버스트미지원</summary>
-        [BurstDiscard]
-        public T[] ReadArray<T>() where T : unmanaged
-        {
-            int size = Read<int>();
-            int typeSize = UnsafeUtility.SizeOf<T>();
-            int len = size / typeSize;
-            T[] result = new T[len];
-            unsafe
+            Read(out int length);
+            int byteLen = length * Unsafe.SizeOf<T>();
+            result = new T[length];
+            if (length == 0)
+                return;
+            void* source = BeginRead(byteLen);
+            fixed (void* destPtr = &result[0])
             {
-                fixed (void* dest = &result[0])
-                {
-                    UnsafeUtility.MemCpy(dest,GetPtr(),size);
-                }
+                Unsafe.CopyBlock(destPtr, source, (uint)byteLen);
             }
-            AddPosition(size);
-            return result;
         }
 
-        /// <summary> 문자열을 반환합니다. / 버스트미지원 </summary>
-        [BurstDiscard]
-        public string ReadString()
+        public void Read(out string str)
         {
-            string result = "";
-            int size = Read<int>();
-            if (size == 0)
-                return "";
-            result = System.Text.Encoding.UTF8.GetString((byte*)GetPtr(), size);
-            AddPosition(size);
-            return result;
+            Read(out int byteCount);
+            if (byteCount == 0)
+            {
+                str = "";
+                return;
+            }
+            byte* srcPtr = (byte*)BeginRead(byteCount);
+            str = Encoding.UTF8.GetString(srcPtr, byteCount);
         }
-        #endregion
+
+        public void ReadRef(INativeBinaryable binaryable)
+        {
+            binaryable.OnNativeRead(this);   
+        }
 
         public void Dispose()
         {
-            AllocatorManager.Free(Allocator.Persistent,_position);
+            _dispose();
         }
+
+        private void _dispose()
+        {
+            if (_handle.IsAllocated)
+                _handle.Free();
+        }
+
+        #region T1....T7
+        public unsafe void Read<T1, T2>(out T1 _1, out T2 _2)
+            where T1 : unmanaged
+            where T2 : unmanaged
+        {
+            _1 = *(T1*)BeginRead(Unsafe.SizeOf<T1>());
+            _2 = *(T2*)BeginRead(Unsafe.SizeOf<T2>());
+        }
+
+        public unsafe void Read<T1, T2, T3>(out T1 _1, out T2 _2, out T3 _3)
+            where T1 : unmanaged
+            where T2 : unmanaged
+            where T3 : unmanaged
+        {
+            _1 = *(T1*)BeginRead(Unsafe.SizeOf<T1>());
+            _2 = *(T2*)BeginRead(Unsafe.SizeOf<T2>());
+            _3 = *(T3*)BeginRead(Unsafe.SizeOf<T3>());
+        }
+
+        public unsafe void Read<T1, T2, T3, T4>(out T1 _1, out T2 _2, out T3 _3, out T4 _4)
+            where T1 : unmanaged
+            where T2 : unmanaged
+            where T3 : unmanaged
+            where T4 : unmanaged
+        {
+            _1 = *(T1*)BeginRead(Unsafe.SizeOf<T1>());
+            _2 = *(T2*)BeginRead(Unsafe.SizeOf<T2>());
+            _3 = *(T3*)BeginRead(Unsafe.SizeOf<T3>());
+            _4 = *(T4*)BeginRead(Unsafe.SizeOf<T4>());
+        }
+
+        public unsafe void Read<T1, T2, T3, T4, T5>(out T1 _1, out T2 _2, out T3 _3, out T4 _4, out T5 _5)
+            where T1 : unmanaged
+            where T2 : unmanaged
+            where T3 : unmanaged
+            where T4 : unmanaged
+            where T5 : unmanaged
+        {
+            _1 = *(T1*)BeginRead(Unsafe.SizeOf<T1>());
+            _2 = *(T2*)BeginRead(Unsafe.SizeOf<T2>());
+            _3 = *(T3*)BeginRead(Unsafe.SizeOf<T3>());
+            _4 = *(T4*)BeginRead(Unsafe.SizeOf<T4>());
+            _5 = *(T5*)BeginRead(Unsafe.SizeOf<T5>());
+        }
+
+        public unsafe void Read<T1, T2, T3, T4, T5, T6>(out T1 _1, out T2 _2, out T3 _3, out T4 _4, out T5 _5,
+            out T6 _6)
+            where T1 : unmanaged
+            where T2 : unmanaged
+            where T3 : unmanaged
+            where T4 : unmanaged
+            where T5 : unmanaged
+            where T6 : unmanaged
+        {
+            _1 = *(T1*)BeginRead(Unsafe.SizeOf<T1>());
+            _2 = *(T2*)BeginRead(Unsafe.SizeOf<T2>());
+            _3 = *(T3*)BeginRead(Unsafe.SizeOf<T3>());
+            _4 = *(T4*)BeginRead(Unsafe.SizeOf<T4>());
+            _5 = *(T5*)BeginRead(Unsafe.SizeOf<T5>());
+            _6 = *(T6*)BeginRead(Unsafe.SizeOf<T6>());
+        }
+
+        public unsafe void Read<T1, T2, T3, T4, T5, T6, T7>(out T1 _1, out T2 _2, out T3 _3, out T4 _4, out T5 _5,
+            out T6 _6, out T7 _7)
+            where T1 : unmanaged
+            where T2 : unmanaged
+            where T3 : unmanaged
+            where T4 : unmanaged
+            where T5 : unmanaged
+            where T6 : unmanaged
+            where T7 : unmanaged
+        {
+            _1 = *(T1*)BeginRead(Unsafe.SizeOf<T1>());
+            _2 = *(T2*)BeginRead(Unsafe.SizeOf<T2>());
+            _3 = *(T3*)BeginRead(Unsafe.SizeOf<T3>());
+            _4 = *(T4*)BeginRead(Unsafe.SizeOf<T4>());
+            _5 = *(T5*)BeginRead(Unsafe.SizeOf<T5>());
+            _6 = *(T6*)BeginRead(Unsafe.SizeOf<T6>());
+            _7 = *(T7*)BeginRead(Unsafe.SizeOf<T7>());
+        }
+        #endregion
     }
 }
-
-/*// 읽기용 커서 (별도 관리된다고 가정)
-long _readPos = 0; 
-
-[MethodImpl(MethodImplOptions.AggressiveInlining)]
-private void* BeginRead(uint byteLength)
-{
-    // 1. 쓰기 때와 똑같은 규칙으로 정렬 단위 결정
-    uint alignment = byteLength >= 8 ? 8 : byteLength;
-    if ((alignment & (alignment - 1)) != 0) alignment = 1;
-
-    long currentPos = _readPos;
-
-    // 2. 패딩을 포함한 시작 위치 계산 (점프!)
-    long alignedPos = (currentPos + (alignment - 1)) & ~(alignment - 1);
-    
-    // 3. 유효성 검사 (데이터가 충분한지)
-    if (alignedPos + byteLength > _length) throw new IndexOutOfRangeException();
-
-    // 4. 읽기 커서 업데이트 (패딩 + 데이터 길이만큼 전진)
-    _readPos = alignedPos + byteLength;
-
-    // 5. 정렬된 위치의 포인터 반환
-    return (byte*)_array + alignedPos;
-}*/

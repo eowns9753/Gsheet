@@ -23,10 +23,10 @@ namespace DefaultNamespace
         {
             testButton.onClick.AddListener(() =>
             {
-                /*BenchMark m = new BenchMark();
-                m.Start();*/
-                SerializeTest t = new();
-                t.Start();
+                BenchMark m = new BenchMark();
+                m.Start();
+                /*SerializeTest t = new();
+                t.Start();*/
 
             });
         }

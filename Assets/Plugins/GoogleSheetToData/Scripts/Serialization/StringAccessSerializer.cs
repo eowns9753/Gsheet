@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Collections;
@@ -44,7 +44,7 @@ namespace Rui.IO.Serialization
                 }
             }
             writer.Write(count,headerPos);
-        }*/
+        }#1#
 
         /*public void Read(NativeBinaryReader reader)
         {
@@ -58,9 +58,9 @@ namespace Rui.IO.Serialization
                 list.Add(access);
             }
             _accessList = &list;
-        }*/
+        }#1#
 
-        public static void ReadToPrepare(NativeBinaryReader reader)
+        public static void ReadToPrepare(NativeBinaryReader_Legacy reader)
         {
             int size = reader.Read<int>();
             for (int i = 0; i < size; i++)
@@ -72,4 +72,4 @@ namespace Rui.IO.Serialization
             UnsafeList<StringAccess>.Destroy(_accessList);
         }
     }
-}
+}*/

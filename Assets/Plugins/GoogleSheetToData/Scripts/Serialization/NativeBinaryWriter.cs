@@ -35,16 +35,14 @@ namespace Rui.IO.Serialization
             _dispose();
         }
 
-        public ReadOnlySpan<byte> ToSpan()
-        {
-            return new ReadOnlySpan<byte>(_array.ToPointer(), Length);
-        }
-        
         /// <summary>
-        /// 언제든 바뀝니다 조심
+        /// Writer에 추가적인 쓰기작업이 발생할경우 반환한 주소값이 유효하지않게 될 수 있습니다.
         /// </summary>
         /// <returns></returns>
-        public void* GetPtr() => _array.ToPointer();
+        public NativePointer<byte> ToPtr()
+        {
+            return new NativePointer<byte>(_array);
+        }
         
         #region BeginWrite / EnsureCapacity
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -108,15 +106,6 @@ namespace Rui.IO.Serialization
         {
             (*(T*)BeginWrite(Unsafe.SizeOf<T>())) = data;
         }
-
-        public void Write(IntPtr ptr, uint len, uint size)
-        {
-            uint byteLen = len * size;
-            Write(len);
-            void* destPtr = BeginWrite(byteLen);
-            void* srcPtr = (void*)(ptr);
-            Unsafe.CopyBlock(destPtr, srcPtr, byteLen);
-        }
         
         /// <summary> 1byte로 채워지는 여유 공간을 작성합니다</summary>
         public void WritePadding(int byteLen)
@@ -125,7 +114,7 @@ namespace Rui.IO.Serialization
             Unsafe.InitBlock(destPtr, 0, (uint)byteLen);
         }
 
-        public void Write<T>(ReadOnlySpan<T> data) where T : unmanaged
+        public void WriteSpan<T>(ReadOnlySpan<T> data) where T : unmanaged
         {
             int byteLen = Unsafe.SizeOf<T>() * data.Length;
             Write(data.Length); // 개수 기록
@@ -140,11 +129,18 @@ namespace Rui.IO.Serialization
         {
             int byteLen = Unsafe.SizeOf<T>() * data.Length;
             Write(data.Length);
+            if (data.Length == 0)
+                return;
             void* destPtr = BeginWrite(byteLen);
             fixed (void* srcPtr = &data[0])
             {
                 Unsafe.CopyBlock(destPtr, srcPtr, (uint)byteLen);
             }
+        }
+
+        public void WriteRef(INativeBinaryable binaryable)
+        {
+            binaryable.OnNativeWrite(this);
         }
         
         public void Write(string str)
@@ -162,6 +158,11 @@ namespace Rui.IO.Serialization
                 }
             }
         }
+
+        public byte[] ToArray()
+        {
+            return ToPtr().AsSpan((int)_length).ToArray();
+        }
         
         public void Dispose()
         {
@@ -178,7 +179,6 @@ namespace Rui.IO.Serialization
                 _length = _capacity = 0;
             }
         }
-        
         
         #region T1....T7
         public void Write<T1, T2>(T1 _1, T2 _2)
