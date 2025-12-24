@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEditor.Compilation;
 using UnityEngine;
 using Assembly = System.Reflection.Assembly;
@@ -59,5 +60,17 @@ namespace SheetData.Editor.Generator
             return result;
         }
         
+        public static bool IsUnmanaged(Type type)
+        {
+            if (type.IsPrimitive || type.IsEnum) return true;
+            if (!type.IsValueType) return false;
+            foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+            {
+                if (!IsUnmanaged(field.FieldType))
+                    return false;
+            }
+
+            return true;
+        }
     }
 }

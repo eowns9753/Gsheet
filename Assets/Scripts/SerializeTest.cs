@@ -1,5 +1,5 @@
 ﻿using System;
-using Rui.IO.Serialization;
+using LWSerializer;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -23,7 +23,7 @@ namespace DefaultNamespace
         }
     }
     
-    public class TestStruct : INativeBinaryable
+    public class TestStruct : ILwSerializable
     {
         public TestStructChild child; //26
         public Vector2 vec; //34
@@ -33,12 +33,12 @@ namespace DefaultNamespace
         public decimal deci; //58
         public float3 f3; //70
 
-        void INativeBinaryable.OnNativeWrite(NativeBinaryWriter writer)
+        void ILwSerializable.OnNativeWrite(LwBinaryWriter writer)
         {
             writer.Write(child, vec, integer, fl, lon, deci, f3);
         }
 
-        void INativeBinaryable.OnNativeRead(NativeBinaryReader reader)
+        void ILwSerializable.OnNativeRead(LwBinaryReader reader)
         {
             reader.Read(out child, out vec, out integer, out fl, out lon, out deci, out f3);
         }
@@ -55,7 +55,7 @@ namespace DefaultNamespace
 
         public void Read(byte[] datas)
         {
-            NativeBinaryReader reader = new NativeBinaryReader(datas);
+            LwBinaryReader reader = new LwBinaryReader(datas);
             reader.Read(out int count);
             for (int i = 0; i < count; i++)
             {
@@ -80,7 +80,7 @@ namespace DefaultNamespace
                 };
             }
 
-            NativeBinaryWriter writer = new NativeBinaryWriter(128);
+            LwBinaryWriter writer = new LwBinaryWriter(128);
             writer.Write(count);
             for (int i = 0; i < structs.Length; i++)
                 writer.WriteRef(structs[i]);

@@ -1,18 +1,39 @@
 using System;
 using DefaultNamespace;
-using Rui.IO.Serialization;
-using MemoryPack;
+using LWSerializer;
 
 namespace SheetData.Generator
 {
-    [MemoryPackable]
-    public partial class ExampleClass
+    public partial class ExampleClass : ILwSerializable
     {
-        public string localizeName { get; private set; }
-        public float time { get; private set; }
-        public TestEnum property { get; private set; }
-        public int[] arr { get; private set; } = new int[1];
-        public TestEnum[] properties { get; private set; } = new TestEnum[1];
+        internal string _localizeName;
+        internal float _time;
+        internal TestEnum _property;
+        internal int[] _arr;
+        internal TestEnum[] _properties;
 
+        public string localizeName => _localizeName;
+        public float time => _time;
+        public TestEnum property => _property;
+        public int[] arr => _arr;
+        public TestEnum[] properties => _properties;
+
+        void ILwSerializable.OnNativeWrite(LwBinaryWriter writer)
+        {
+            writer.Write(_localizeName);
+            writer.Write(_time);
+            writer.Write(_property);
+            writer.Write(_arr);
+            writer.Write(_properties);
+        }
+
+        void ILwSerializable.OnNativeRead(LwBinaryReader reader)
+        {
+            reader.Read(out _localizeName);
+            reader.Read(out _time);
+            reader.Read(out _property);
+            reader.Read(out _arr);
+            reader.Read(out _properties);
+        }
     }
 }

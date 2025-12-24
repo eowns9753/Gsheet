@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Rui.IO.Serialization;
+using LWSerializer;
 using Scriban;
 using SheetData.Editor.DownLoader;
 using SheetData.Editor.Utils;
@@ -32,20 +32,52 @@ namespace SheetData.Editor.Generator
             {
                 return TEMPLATE.Render(model);
             }
-            
         }
 
         private TypeModel CreateModel(SheetRawData data, string nameSpace)
         {
-            var properties = new List<PropertyModel>();
+            var m_struct = new List<PropertyModel>();
+            var m_object = new List<PropertyModel>();
+            var m_lwSerializable = new List<PropertyModel>();
+            var m_nativeCollection = new List<PropertyModel>();
+            
+            var ilwSerializableType = typeof(ILwSerializable);
             _namespaceChain.Clear();
             for (int i = 1; i < data.Rows[0].Length; i++)
             {
                 var fieldData = GetField(data.Rows[0][i]);
-                properties.Add(new PropertyModel(){ Name = fieldData.name, Type = fieldData.type});
+                var propertyModel = new PropertyModel() { Name = fieldData.name, Type = fieldData.type };
+                bool haslwSerializable = ilwSerializableType.IsAssignableFrom(fieldData.typedata);
+
+                if (fieldData.typedata == null)
+                {
+                    if (fieldData.type.Contains("NativeList") || fieldData.type.Contains("NativeArray"))
+                    {
+                        m_nativeCollection.Add(propertyModel);
+                        continue;
+                    }
+                    throw new Exception($"{fieldData.type} is not type");
+                }
+                if (haslwSerializable)
+                {
+                    m_lwSerializable.Add(propertyModel);
+                    continue;
+                }
+                if (TypeFinder.IsUnmanaged(fieldData.typedata))
+                {
+                    m_struct.Add(propertyModel);
+                }
+                else
+                {
+                    if(fieldData.typedata == typeof(string))
+                        m_struct.Add(propertyModel);
+                    else
+                        throw new Exception($"{fieldData.typedata} The ILwSerializable interface is not implemented for this type." +
+                                            $" Only unmanaged types or data with the ILwSerializable interface implemented are allowed.");
+                }
             }
             
-            _namespaceChain.Add(typeof(NativeBinaryReader).Namespace);
+            _namespaceChain.Add(typeof(LwBinaryReader).Namespace);
             _namespaceChain.Remove(null);
             //properties
             return new TypeModel
@@ -53,20 +85,24 @@ namespace SheetData.Editor.Generator
                 NamespaceName = nameSpace,
                 TypeKeyword = data.TypeKeyword,
                 TypeName = data.SheetName,
-                Properties = properties,
+                objectMembers = m_object,
+                structMembers = m_struct,
+                lwSerializableMembers = m_lwSerializable,
+                nativeCollections = m_nativeCollection,
                 Usings = _namespaceChain.ToList()
             };
         }
         
-        private (string type, string name) GetField(string content)
+        private (string type, string name, Type typedata) GetField(string content)
         {
             var f = content.Split(' ');
             var typeString = f.First();
             var typeName = f.Last();
             if (typeString.Contains("[]")) //관리형배열
             {
-                AddNameSpaceChain(typeString.Replace("[]", ""));
-                return (typeString, typeName);
+                var findType = typeString.Replace("[]", "");
+                AddNameSpaceChain(findType);
+                return (typeString, typeName, TypeFinder.Find(findType));
             }
             else if (typeString.Contains(">")) //제너릭
             {
@@ -75,12 +111,12 @@ namespace SheetData.Editor.Generator
                 string targetType = typeString.Substring(start + 1, (end - start)-1);
                 var containerType = typeString.Substring(0, start);
                 AddNameSpaceChain(containerType+"`1", targetType);
-                return (typeString, typeName);
+                return (typeString, typeName,  TypeFinder.Find(containerType));
             }
             else
             {
                 AddNameSpaceChain(typeString);
-                return (typeString, typeName);
+                return (typeString, typeName,  TypeFinder.Find(typeString));
             }
         }
 

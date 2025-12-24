@@ -2,8 +2,8 @@
 using System.Buffers;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using LWSerializer;
 using MemoryPack;
-using Rui.IO.Serialization;
 using Unity.Collections;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
@@ -11,7 +11,7 @@ using Debug = UnityEngine.Debug;
 namespace DefaultNamespace
 {
     [MemoryPackable]
-    public partial class BenchExample : INativeBinaryable
+    public partial class BenchExample : ILwSerializable
     {
         public Vector2 direction;
         public float speed;
@@ -24,14 +24,14 @@ namespace DefaultNamespace
         public Vector2[] VecArr = new Vector2[10];
         //public StructNameTest a { get; private set; }
 
-        void INativeBinaryable.OnNativeWrite(NativeBinaryWriter writer)
+        void ILwSerializable.OnNativeWrite(LwBinaryWriter writer)
         {
             writer.Write(direction, speed, testfxStr, testfxStr2, asdasd);
             writer.Write(aaaa);
             writer.Write(VecArr);
         }
 
-        void INativeBinaryable.OnNativeRead(NativeBinaryReader reader)
+        void ILwSerializable.OnNativeRead(LwBinaryReader reader)
         {
             reader.Read(out direction, out speed, out testfxStr, out testfxStr2, out asdasd);
             reader.Read(out aaaa);
@@ -49,7 +49,7 @@ namespace DefaultNamespace
 
             
             var _memoryPackWriter = new ArrayBufferWriter<byte>(64); // 1MB 초기 용량
-            var _nativeBuffer = new NativeBinaryWriter(64);
+            var _nativeBuffer = new LwBinaryWriter(64);
             
             await Task.Delay(1000);
             WriteTofuMem(cycle, _nativeBuffer, new BenchExample());
@@ -70,7 +70,7 @@ namespace DefaultNamespace
             GC.Collect();
         }
 
-        private void WriteTofuMem(int count, NativeBinaryWriter writer, BenchExample b)
+        private void WriteTofuMem(int count, LwBinaryWriter writer, BenchExample b)
         {
             stp.Restart();
             for (int i = 0; i < count; i++)
@@ -112,10 +112,10 @@ namespace DefaultNamespace
                 asdasd = 0.5f,
                 VecArr = new Vector2[10]
             };
-            NativeBinaryWriter writer = new NativeBinaryWriter(512);
+            LwBinaryWriter writer = new LwBinaryWriter(512);
             writer.WriteRef(strudummy);
             
-            NativeBinaryReader reader = new NativeBinaryReader(writer.ToPtr());
+            LwBinaryReader reader = new LwBinaryReader(writer.ToPtr());
             
             stp.Restart();
             for (int i = 0; i < count; i++)
