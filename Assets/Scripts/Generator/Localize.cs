@@ -5,11 +5,12 @@ namespace SheetData.Generator
 {
     public partial class Localize : ILwSerializable
     {
-        internal string _EN;
-        internal string _KR;
-        internal string _JP;
+        private string _EN;
+        private string _KR;
+        private string _JP;
         private string _CN;
-        internal string _TW;
+        private string _TW;
+
 
         public string EN => _EN;
         public string KR => _KR;

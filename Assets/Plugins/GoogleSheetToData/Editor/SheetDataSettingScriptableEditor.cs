@@ -1,4 +1,6 @@
-﻿using System.Data;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Text;
 using System.Threading.Tasks;
 using SheetData.Editor.DownLoader;
@@ -34,10 +36,12 @@ namespace SheetData.Editor
         {
             await RefreshSheetNames(target);
             string generatorCode = "";
+            List<SheetRawData> sheetDatas = new(); 
             for (int i = 0; i < target.SheetInfos.Count; i++)
             {
                 var sheetData = await SheetLoader.Load(target.SheetID, target.SheetInfos[i]);
-                TypeGenerator generator = new TypeGenerator();
+                sheetDatas.Add(sheetData);
+                TypeModelGenerator generator = new TypeModelGenerator();
                 generatorCode = generator.Generator(sheetData, target.GeneratorNameSpace);
                 if (generatorCode != "")
                 {
@@ -46,6 +50,11 @@ namespace SheetData.Editor
                 }
             }
             AssetDatabase.Refresh();
+            foreach (var sheetData in sheetDatas)
+            {
+                var instance = Activator.CreateInstance(sheetData.SheetNameToType);
+                bool isDic = sheetData.IsDictionary();
+            }
         }
         
         async Task RefreshSheetNames(SheetDataSettingScriptable target)

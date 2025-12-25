@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using SheetData.Editor.Generator;
 using UnityEngine;
 
 namespace SheetData.Editor.DownLoader
@@ -12,6 +14,7 @@ namespace SheetData.Editor.DownLoader
         private List<string[]> _rows;
         
         public string SheetName => _sheetName;
+        public Type SheetNameToType => TypeFinder.Find(SheetName);
         public List<string[]> Rows => _rows;
         public string TypeKeyword => _rows.First().First().ToLower();
         
@@ -39,6 +42,17 @@ namespace SheetData.Editor.DownLoader
             }
         }
 
+        public bool IsDictionary()
+        {
+            for (int i = 1; i < _rows.Count; i++)
+            {
+                if (_rows[i].FirstOrDefault() != "")
+                    return true;
+            }
+
+            return false;
+        }
+        
         public bool IsValidation()
         {
             if (_rows.Count == 0)

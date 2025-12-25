@@ -8,19 +8,36 @@ namespace SheetData.Editor.Generator
         public string TypeKeyword { get; set; } // "class" 또는 "struct"
         public string TypeName { get; set; }
         public List<string> Usings { get; set; }
-        public List<PropertyModel> structMembers { get; set; } = new List<PropertyModel>();
-        public List<PropertyModel> objectMembers { get; set; } = new List<PropertyModel>();
-        public List<PropertyModel> lwSerializableMembers { get; set; } = new List<PropertyModel>();
-        public List<PropertyModel> nativeCollections { get; set; } = new List<PropertyModel>();
+        public List<MemberModel> structMembers { get; set; } = new ();
+        public List<MemberModel> objectMembers { get; set; } = new ();
+        public List<MemberModel> lwSerializableMembers { get; set; } = new ();
+        public List<GenericMemberModel> nativeArray { get; set; } = new ();
+        public List<GenericMemberModel> nativeRef { get; set; } = new ();
     }
     
-    public struct PropertyModel
+    public class MemberModel
     {
         public string Type { get; set; }
         public string Name { get; set; }
+
+        public MemberModel(string type, string name)
+        {
+            Type = type;
+            Name = name;
+        }
+    }
+
+    public class GenericMemberModel : MemberModel
+    {
+        public string Generic1 { get; set; }
+        public GenericMemberModel(string type, string name, string generic)
+        : base(type, name)
+        {
+            Generic1 = generic;
+        }
     }
     
-    public class Model
+    public class TypeModelTemplate
     {
         public const string Template_Class = @"{{~ for us in usings ~}}
 using {{ us }};
@@ -39,7 +56,10 @@ namespace {{ namespace_name }}
         {{~ for prop in lw_serializable_members ~}}
         private {{ prop.type }} _{{ prop.name }};
         {{~ end ~}}
-        {{~ for prop in native_collections ~}}
+        {{~ for prop in native_array ~}}
+        private {{ prop.type }} _{{ prop.name }};
+        {{~ end ~}}
+        {{~ for prop in native_ref ~}}
         private {{ prop.type }} _{{ prop.name }};
         {{~ end ~}}
 
@@ -52,9 +72,13 @@ namespace {{ namespace_name }}
         {{~ for prop in lw_serializable_members ~}}
         public {{ prop.type }} {{ prop.name }} => _{{ prop.name }};
         {{~ end ~}}
-        {{~ for prop in native_collections ~}}
+        {{~ for prop in native_array ~}}
         public {{ prop.type }} {{ prop.name }} => _{{ prop.name }};
         {{~ end ~}}
+        {{~ for prop in native_ref ~}}
+        public {{ prop.type }} {{ prop.name }} => _{{ prop.name }};
+        {{~ end ~}}
+
 
         void ILwSerializable.OnNativeWrite(LwBinaryWriter writer)
         {
@@ -67,8 +91,11 @@ namespace {{ namespace_name }}
             {{~ for prop in lw_serializable_members ~}}
             writer.WriteRef(_{{ prop.name }});
             {{~ end ~}}
-            {{~ for prop in native_collections ~}}
-            //writer.Write(_{{ prop.name }});
+            {{~ for prop in native_array ~}}
+            writer.WriteSpan<{{ prop.generic1 }}>(_{{ prop.name }}.AsSpan());
+            {{~ end ~}}
+            {{~ for prop in native_ref ~}}
+            writer.Write(_{{ prop.name }}.Value);
             {{~ end ~}}
         }
 
@@ -83,8 +110,13 @@ namespace {{ namespace_name }}
             {{~ for prop in lw_serializable_members ~}}
             reader.ReadRef(_{{ prop.name }});
             {{~ end ~}}
-            {{~ for prop in native_collections ~}}
-            //reader.ReadRef(_{{ prop.name }});
+            {{~ for prop in native_array ~}}
+            _{{ prop.name }} = new NativeArray<{{ prop.generic1 }}>(reader.PeekSpanLength<{{ prop.generic1 }}>(), Allocator.Persistent);
+            reader.ReadSpan(_{{ prop.name }}.AsSpan());
+            {{~ end ~}}
+            {{~ for prop in native_ref ~}}
+            _{{ prop.name }} = new NativeReference<{{ prop.generic1 }}>(Allocator.Persistent);
+            _{{ prop.name }}.Value = reader.Read<{{ prop.generic1 }}>();
             {{~ end ~}}
         }
     }

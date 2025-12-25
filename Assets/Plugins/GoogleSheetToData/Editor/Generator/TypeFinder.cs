@@ -59,6 +59,15 @@ namespace SheetData.Editor.Generator
             }
             return result;
         }
+
+        public static (string containerType, string genericType) GetGenericType(string typeString)
+        {
+            int end = typeString.IndexOf(">", StringComparison.Ordinal);
+            int start = typeString.IndexOf("<", StringComparison.Ordinal);
+            string targetType = typeString.Substring(start + 1, (end - start)-1);
+            var containerType = typeString.Substring(0, start);
+            return  (containerType, targetType);
+        }
         
         public static bool IsUnmanaged(Type type)
         {

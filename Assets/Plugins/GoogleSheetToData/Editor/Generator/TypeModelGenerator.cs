@@ -12,9 +12,9 @@ using UnityEngine;
 
 namespace SheetData.Editor.Generator
 {
-    internal class TypeGenerator
+    internal class TypeModelGenerator
     {
-        private static readonly Template TEMPLATE = Template.Parse(Model.Template_Class);
+        private static readonly Template TEMPLATE = Template.Parse(TypeModelTemplate.Template_Class);
         private HashSet<string> _missingTypes = new ();
         private HashSet<string> _namespaceChain = new();
         
@@ -36,27 +36,34 @@ namespace SheetData.Editor.Generator
 
         private TypeModel CreateModel(SheetRawData data, string nameSpace)
         {
-            var m_struct = new List<PropertyModel>();
-            var m_object = new List<PropertyModel>();
-            var m_lwSerializable = new List<PropertyModel>();
-            var m_nativeCollection = new List<PropertyModel>();
-            
+            var m_struct = new List<MemberModel>();
+            var m_object = new List<MemberModel>();
+            var m_lwSerializable = new List<MemberModel>();
+            var m_nativeArray = new List<GenericMemberModel>();
+            var m_nativeRef = new List<GenericMemberModel>();
             var ilwSerializableType = typeof(ILwSerializable);
             _namespaceChain.Clear();
             for (int i = 1; i < data.Rows[0].Length; i++)
             {
                 var fieldData = GetField(data.Rows[0][i]);
-                var propertyModel = new PropertyModel() { Name = fieldData.name, Type = fieldData.type };
+                var propertyModel = new MemberModel(fieldData.type, fieldData.name);
                 bool haslwSerializable = ilwSerializableType.IsAssignableFrom(fieldData.typedata);
 
                 if (fieldData.typedata == null)
                 {
-                    if (fieldData.type.Contains("NativeList") || fieldData.type.Contains("NativeArray"))
+                    if (fieldData.type.Contains("NativeArray"))
                     {
-                        m_nativeCollection.Add(propertyModel);
+                        var generic = TypeFinder.GetGenericType(fieldData.type).genericType;
+                        m_nativeArray.Add(new GenericMemberModel(fieldData.type, fieldData.name, generic));
                         continue;
                     }
-                    throw new Exception($"{fieldData.type} is not type");
+                    if (fieldData.type.Contains("NativeReference"))
+                    {
+                        var generic = TypeFinder.GetGenericType(fieldData.type).genericType;
+                        m_nativeRef.Add(new GenericMemberModel(fieldData.type, fieldData.name, generic));
+                        continue;
+                    }
+                    throw new Exception($"{fieldData.type} is not support type");
                 }
                 if (haslwSerializable)
                 {
@@ -88,7 +95,8 @@ namespace SheetData.Editor.Generator
                 objectMembers = m_object,
                 structMembers = m_struct,
                 lwSerializableMembers = m_lwSerializable,
-                nativeCollections = m_nativeCollection,
+                nativeArray = m_nativeArray,
+                nativeRef = m_nativeRef,
                 Usings = _namespaceChain.ToList()
             };
         }
@@ -106,12 +114,9 @@ namespace SheetData.Editor.Generator
             }
             else if (typeString.Contains(">")) //제너릭
             {
-                int end = typeString.IndexOf(">", StringComparison.Ordinal);
-                int start = typeString.IndexOf("<", StringComparison.Ordinal);
-                string targetType = typeString.Substring(start + 1, (end - start)-1);
-                var containerType = typeString.Substring(0, start);
-                AddNameSpaceChain(containerType+"`1", targetType);
-                return (typeString, typeName,  TypeFinder.Find(containerType));
+                var data = TypeFinder.GetGenericType(typeString);
+                AddNameSpaceChain(data.containerType+"`1", data.genericType);
+                return (typeString, typeName,  TypeFinder.Find(data.containerType));
             }
             else
             {

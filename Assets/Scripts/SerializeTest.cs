@@ -62,6 +62,7 @@ namespace DefaultNamespace
                 TestStruct nStruct = new TestStruct();
                 reader.ReadRef(nStruct);
             }
+            Debug.Log($"Hash - {reader.GetXxHash64(15)}");
             reader.Dispose();
         }
 
@@ -85,6 +86,7 @@ namespace DefaultNamespace
             for (int i = 0; i < structs.Length; i++)
                 writer.WriteRef(structs[i]);
             var result = writer.ToArray();
+            Debug.Log($"Hash - {writer.GetXxHash64(15)}");
             writer.Dispose();
             return result;
             //writer

@@ -6,11 +6,12 @@ namespace SheetData.Generator
 {
     public partial class ExampleClass : ILwSerializable
     {
-        internal string _localizeName;
-        internal float _time;
-        internal TestEnum _property;
-        internal int[] _arr;
-        internal TestEnum[] _properties;
+        private string _localizeName;
+        private float _time;
+        private TestEnum _property;
+        private int[] _arr;
+        private TestEnum[] _properties;
+
 
         public string localizeName => _localizeName;
         public float time => _time;
