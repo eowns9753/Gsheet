@@ -12,10 +12,12 @@ namespace SheetData.Editor.DownLoader
         private int _columnCount;
         private string _sheetName;
         private List<string[]> _rows;
+        private List<HeaderType> _headers;
         
         public string SheetName => _sheetName;
         public Type SheetNameToType => TypeFinder.Find(SheetName);
         public List<string[]> Rows => _rows;
+        public List<HeaderType> Headers => _headers;
         public string TypeKeyword => _rows.First().First().ToLower();
         
         public SheetRawData(string sheetName, string csvData)
@@ -42,6 +44,14 @@ namespace SheetData.Editor.DownLoader
             }
         }
 
+        public void RefreshHeaderRowType()
+        {
+            var header = _rows[0];
+            _headers = new();
+            foreach (var row in header)
+                _headers.Add(new HeaderType(row));
+        }
+        
         public bool IsDictionary()
         {
             for (int i = 1; i < _rows.Count; i++)

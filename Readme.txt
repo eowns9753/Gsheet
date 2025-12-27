@@ -22,6 +22,7 @@ int, string, Vector2, array, enum, NativeReference, NativeArray,
 
 https://docs.google.com/spreadsheets/d/1188AKPfAl2taqn6G-JDENJF-WeO_YA_gE4SRYzMRZBc/edit
 
+
 https://docs.google.com/spreadsheets/d/1188AKPfAl2taqn6G-JDENJF-WeO_YA_gE4SRYzMRZBc/export?format=csv&gid=24006901
 
 https://docs.google.com/spreadsheets/d/{spreadsheetId}/gviz/tq?tqx=out:tsv&sheet={sheetName}&range={dataRange}
@@ -30,7 +31,3 @@ https://docs.google.com/spreadsheets/d/{spreadsheetId}/gviz/tq?tqx=out:tsv&sheet
 
 
 
-
-전체문자열 
-\":[{\"1\":0}]}]]}],1000,26]"],[21350203,"[1,0,\"24006901\",[{\"1\":[[0,0,\"ExampleSturct\"],[{\"1\":6,\"2\
-여기서 24006901 이 값은 항상 바뀌는데 이걸 찾을수 있는 정규식을 만들어줘

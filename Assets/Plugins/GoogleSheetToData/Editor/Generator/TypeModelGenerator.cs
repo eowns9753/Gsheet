@@ -23,6 +23,8 @@ namespace SheetData.Editor.Generator
             if (!sheetData.IsValidation())
                 return "";
             var model = CreateModel(sheetData, nameSpace);
+            //sheetData.Headers
+            throw new Exception("헤더식으로 변경");
             if (_missingTypes.Count > 0)
             {
                 DebugLog_MissionTypes(sheetData);
