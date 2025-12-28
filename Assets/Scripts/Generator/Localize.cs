@@ -11,12 +11,12 @@ namespace SheetData.Generator
         private string _CN;
         private string _TW;
 
-
         public string EN => _EN;
         public string KR => _KR;
         public string JP => _JP;
         public string CN => _CN;
         public string TW => _TW;
+
 
         void ILwSerializable.OnNativeWrite(LwBinaryWriter writer)
         {

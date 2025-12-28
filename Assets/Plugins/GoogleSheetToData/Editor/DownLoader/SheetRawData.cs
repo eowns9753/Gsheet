@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using LWSerializer;
 using SheetData.Editor.Generator;
+using SheetData.Editor.Parsing;
+using SheetData.IO;
 using UnityEngine;
 
 namespace SheetData.Editor.DownLoader
@@ -10,19 +13,19 @@ namespace SheetData.Editor.DownLoader
     {
         delegate void SplitRowStringForEachHandler(string str, int index);
         private int _columnCount;
-        private string _sheetName;
+        private SheetInfo _sheetInfo;
         private List<string[]> _rows;
         private List<HeaderType> _headers;
         
-        public string SheetName => _sheetName;
+        public string SheetName => _sheetInfo.SheetName;
         public Type SheetNameToType => TypeFinder.Find(SheetName);
         public List<string[]> Rows => _rows;
         public List<HeaderType> Headers => _headers;
         public string TypeKeyword => _rows.First().First().ToLower();
         
-        public SheetRawData(string sheetName, string csvData)
+        public SheetRawData(SheetInfo info, string csvData)
         {
-            _sheetName = sheetName;
+            _sheetInfo = info;
             if (string.IsNullOrEmpty(csvData))
                 return;
             _rows = new();
@@ -42,14 +45,8 @@ namespace SheetData.Editor.DownLoader
                 });
                 _rows.Add(strs);
             }
-        }
-
-        public void RefreshHeaderRowType()
-        {
-            var header = _rows[0];
-            _headers = new();
-            foreach (var row in header)
-                _headers.Add(new HeaderType(row));
+            RefreshHeaderRowType();
+            _sheetInfo = _sheetInfo.UpdateInfo(_rows.Count - 1, IsDictionary());
         }
         
         public bool IsDictionary()
@@ -77,8 +74,25 @@ namespace SheetData.Editor.DownLoader
                 Debug.LogError($"{SheetName}' column more than two");
                 return false;
             }
-
             return true;
+        }
+
+        public string ClassGenerator(string nameSpace)
+        {
+            TypeModelGenerator generator = new TypeModelGenerator();
+            return generator.Generator(this, nameSpace);
+        }
+
+        #region private
+        void RefreshHeaderRowType()
+        {
+            var header = _rows[0];
+            _headers = new();
+            foreach (var row in header)
+            {
+                _headers.Add(new HeaderType(row));
+            }
+            _headers[0] = new HeaderType("string");
         }
         
         bool IsAnnotation(string strs) => strs.Length >= 2 && strs.Substring(0, 2) == "//";
@@ -124,7 +138,7 @@ namespace SheetData.Editor.DownLoader
             }
             caller.Invoke(len == 0 ? "" : row.Substring(startIdx, len), splitIdx++);
         }
-        
+        #endregion
         
     }
 }

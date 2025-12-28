@@ -1,4 +1,5 @@
 ﻿using System;
+using LWBinarySerializer;
 using LWSerializer;
 using Unity.Mathematics;
 using UnityEngine;
@@ -50,7 +51,27 @@ namespace DefaultNamespace
         {
             var datas = Write(5);
             Read(datas);
-           
+
+            var unmanaArr = Example_Unmanaged.Write(new Example_Unmanaged.ExampleStruct()
+            {
+                m_bool = false,
+                m_float = 2.5f,
+                m_int = 123123
+            });
+
+            var unmana = Example_Unmanaged.Read(unmanaArr);
+
+            var managedArr = Example_Managed.Write(new Example_Managed.ExampleClass()
+                { m_float = 5.5f, m_arr = new string[2] { "bbbbb", "ccccc" } });
+            var mana = Example_Managed.Read(managedArr);
+
+            
+            
+            var bytes = LwUtility.To("hello world");
+            var data = LwUtility.From(bytes);
+            var hash = LwUtility.ToXxHash64(bytes);
+            
+
         }
 
         public void Read(byte[] datas)

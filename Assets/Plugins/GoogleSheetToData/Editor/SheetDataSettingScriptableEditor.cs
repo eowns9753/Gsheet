@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Text;
 using System.Threading.Tasks;
+using LWSerializer;
 using SheetData.Editor.DownLoader;
-using SheetData.Editor.Generator;
 using SheetData.Editor.Utils;
 using UnityEditor;
 using UnityEngine;
@@ -35,26 +34,39 @@ namespace SheetData.Editor
         async void GenerateData(SheetDataSettingScriptable target)
         {
             await RefreshSheetNames(target);
-            string generatorCode = "";
-            List<SheetRawData> sheetDatas = new(); 
+            
+            List<SheetRawData> sheetDatas = new();
             for (int i = 0; i < target.SheetInfos.Count; i++)
             {
-                var sheetData = await SheetLoader.Load(target.SheetID, target.SheetInfos[i]);
-                sheetDatas.Add(sheetData);
-                TypeModelGenerator generator = new TypeModelGenerator();
-                generatorCode = generator.Generator(sheetData, target.GeneratorNameSpace);
+                var raw = await SheetLoader.Load(target.SheetID, target.SheetInfos[i]);
+                sheetDatas.Add(raw);
+                foreach (var header in raw.Headers)
+                {
+                    if(header.IsMissingType)
+                        throw new Exception($"Header {header.originalText} is missing type");
+                }        
+            }
+            foreach (var sheetData in sheetDatas)
+            {
+                var generatorCode= sheetData.ClassGenerator(target.GeneratorNameSpace);
                 if (generatorCode != "")
                 {
                     string path = IOUtils.GetSystemPath($"{target.CodeGeneratorPos}/{sheetData.SheetName}.cs");
-                    IOUtils.SaveFile(path, Encoding.UTF8.GetBytes(generatorCode)); 
+                    IOUtils.SaveFile(path, Encoding.UTF8.GetBytes(generatorCode));
                 }
             }
             AssetDatabase.Refresh();
+            await Task.Delay(100);
+            
+            
+            
+            //LwBinaryWriter writer = new LwBinaryWriter();
             foreach (var sheetData in sheetDatas)
             {
                 var instance = Activator.CreateInstance(sheetData.SheetNameToType);
                 bool isDic = sheetData.IsDictionary();
             }
+            //writer
         }
         
         async Task RefreshSheetNames(SheetDataSettingScriptable target)

@@ -16,7 +16,7 @@ namespace SheetData.Editor.DownLoader
         {
             // 1. 요청할 URL 생성
             //string targetUrl =  $"https://docs.google.com/spreadsheets/d/{sheetID}/export?format=csv&sheet={sheetName}";
-            string targetUrl = $"https://docs.google.com/spreadsheets/d/{sheetID}/export?format=csv&gid={sheetinfo.GID}";
+            string targetUrl = $"https://docs.google.com/spreadsheets/d/{sheetID}/export?format=csv&gid={sheetinfo.Gid}";
             // 2. UnityWebRequest를 사용한 비동기 요청
             using (UnityWebRequest webRequest = UnityWebRequest.Get(targetUrl))
             {
@@ -24,12 +24,12 @@ namespace SheetData.Editor.DownLoader
                 if (webRequest.result == UnityWebRequest.Result.ConnectionError || webRequest.result == UnityWebRequest.Result.ProtocolError)
                 {
                     Debug.LogError($"GoogleSheet Load Error: {webRequest.error}");
-                    return new SheetRawData(sheetinfo.SheetName, "");
+                    return new SheetRawData(sheetinfo, "");
                 }
                 else
                 {
                     string csvData = webRequest.downloadHandler.text;
-                    return new SheetRawData(sheetinfo.SheetName, csvData);
+                    return new SheetRawData(sheetinfo, csvData);
                 }
             }
         }
@@ -66,11 +66,8 @@ namespace SheetData.Editor.DownLoader
                     // 매칭 실행
                     Match matchId = Regex.Match(block, patternId);
                     Match matchName = Regex.Match(block, patternName);
-                    result.Add(new SheetInfo()
-                    {
-                        SheetName = matchName.Groups[1].Value.Replace("\\", ""),
-                        GID = matchId.Groups[1].Value.Replace("\\","")
-                    });
+                    result.Add(new SheetInfo(matchName.Groups[1].Value.Replace("\\", ""),
+                        matchId.Groups[1].Value.Replace("\\", "")));
                 }
             }
             return result;

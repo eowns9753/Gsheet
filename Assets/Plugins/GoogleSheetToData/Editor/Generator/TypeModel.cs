@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using SheetData.Editor.DownLoader;
 
 namespace SheetData.Editor.Generator
 {
@@ -9,7 +10,7 @@ namespace SheetData.Editor.Generator
         public string TypeName { get; set; }
         public List<string> Usings { get; set; }
         public List<MemberModel> structMembers { get; set; } = new ();
-        public List<MemberModel> objectMembers { get; set; } = new ();
+        public List<MemberModel> arrayMembers { get; set; } = new ();
         public List<MemberModel> lwSerializableMembers { get; set; } = new ();
         public List<GenericMemberModel> nativeArray { get; set; } = new ();
         public List<GenericMemberModel> nativeRef { get; set; } = new ();
@@ -20,20 +21,19 @@ namespace SheetData.Editor.Generator
         public string Type { get; set; }
         public string Name { get; set; }
 
-        public MemberModel(string type, string name)
+        public MemberModel(HeaderType typeData)
         {
-            Type = type;
-            Name = name;
+            Type = typeData.typeString;
+            Name = typeData.memberName;
         }
     }
 
     public class GenericMemberModel : MemberModel
     {
         public string Generic1 { get; set; }
-        public GenericMemberModel(string type, string name, string generic)
-        : base(type, name)
+        public GenericMemberModel(HeaderType typeData) : base(typeData)
         {
-            Generic1 = generic;
+            Generic1 = typeData.genericType.Name;
         }
     }
     
@@ -50,7 +50,7 @@ namespace {{ namespace_name }}
         {{~ for prop in struct_members ~}}
         private {{ prop.type }} _{{ prop.name }};
         {{~ end ~}}
-        {{~ for prop in object_members ~}}
+        {{~ for prop in array_members ~}}
         private {{ prop.type }} _{{ prop.name }};
         {{~ end ~}}
         {{~ for prop in lw_serializable_members ~}}
@@ -66,7 +66,7 @@ namespace {{ namespace_name }}
         {{~ for prop in struct_members ~}}
         public {{ prop.type }} {{ prop.name }} => _{{ prop.name }};
         {{~ end ~}}
-        {{~ for prop in object_members ~}}
+        {{~ for prop in array_members ~}}
         public {{ prop.type }} {{ prop.name }} => _{{ prop.name }};
         {{~ end ~}}
         {{~ for prop in lw_serializable_members ~}}
@@ -85,8 +85,8 @@ namespace {{ namespace_name }}
             {{~ for prop in struct_members ~}}
             writer.Write(_{{ prop.name }});
             {{~ end ~}}
-            {{~ for prop in object_members ~}}
-            writer.WriteRef(_{{ prop.name }});
+            {{~ for prop in array_members ~}}
+            writer.Write(_{{ prop.name }});
             {{~ end ~}}
             {{~ for prop in lw_serializable_members ~}}
             writer.WriteRef(_{{ prop.name }});
@@ -104,8 +104,8 @@ namespace {{ namespace_name }}
             {{~ for prop in struct_members ~}}
             reader.Read(out _{{ prop.name }});
             {{~ end ~}}
-            {{~ for prop in object_members ~}}
-            reader.ReadRef(_{{ prop.name }});
+            {{~ for prop in array_members ~}}
+            reader.Read(out _{{ prop.name }});
             {{~ end ~}}
             {{~ for prop in lw_serializable_members ~}}
             reader.ReadRef(_{{ prop.name }});

@@ -6,7 +6,7 @@ namespace SheetData.Generator
 {
     public class SheetData
     {
-        public static Dictionary<string, Localize> Localize;
+        /*public static Dictionary<string, Localize> Localize;
         public static ExampleClass[] ExampleClass;
         public static Dictionary<string, ExampleSturct> ExampleSturct;
 
@@ -25,6 +25,6 @@ namespace SheetData.Generator
             writer.WriteRef(ExampleClass);
             writer.Save();
             writer.Dispose();
-        }
+        }*/
     }
 }

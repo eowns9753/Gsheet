@@ -12,12 +12,12 @@ namespace SheetData.Generator
         private int[] _arr;
         private TestEnum[] _properties;
 
-
         public string localizeName => _localizeName;
         public float time => _time;
         public TestEnum property => _property;
         public int[] arr => _arr;
         public TestEnum[] properties => _properties;
+
 
         void ILwSerializable.OnNativeWrite(LwBinaryWriter writer)
         {

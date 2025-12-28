@@ -15,10 +15,3 @@ MonoBehaviour:
   _codeGeneratorPos: Scripts/Generator
   _generatorNameSpace: SheetData.Generator
   _sheetID: 1188AKPfAl2taqn6G-JDENJF-WeO_YA_gE4SRYzMRZBc
-  _sheetInfos:
-  - SheetName: ExampleClass
-    GID: 0
-  - SheetName: ExampleSturct
-    GID: 24006901
-  - SheetName: Localize
-    GID: 764366631

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Unity.Collections;
 using UnityEditor.Compilation;
 using UnityEngine;
 using Assembly = System.Reflection.Assembly;
@@ -13,25 +14,55 @@ namespace SheetData.Editor.Generator
         private static Dictionary<string, Type> _cachedTypes = new Dictionary<string, Type>()
         {
             {"string", typeof(string)},
+            {"string[]", typeof(string[])},
+            {"byte", typeof(byte)},
+            {"byte[]", typeof(byte[])},
+            {"short", typeof(short)},
+            {"short[]", typeof(short[])},
             {"int", typeof(int)},
+            {"int[]", typeof(int[])},
             {"float", typeof(float)},
-            {"Vector2", typeof(Vector2)},
+            {"float[]", typeof(float[])},
+            {"double", typeof(double)},
+            {"double[]", typeof(double[])},
+            {"long", typeof(long)},
+            {"long[]", typeof(long[])},
             {"decimal", typeof(decimal)},
+            {"decimal[]", typeof(decimal[])},
             {"char", typeof(char)},
+            {"char[]", typeof(char[])},
             {"bool", typeof(bool)},
-            //{"", typeof(FixedString)}
+            {"bool[]", typeof(bool[])},
+            
+            {"Vector2", typeof(Vector2)},
+            {"Vector2[]", typeof(Vector2[])},
+            {"Vector2Int", typeof(Vector2Int)},
+            {"Vector2Int[]", typeof(Vector2Int[])},
+            {"Vector3", typeof(Vector3)},
+            {"Vector3[]", typeof(Vector3[])},
+            {"Vector3Int", typeof(Vector3Int)},
+            {"Vector3Int[]", typeof(Vector3Int[])},
+            
+            {"Quaternion", typeof(Quaternion)},
+            {"Quaternion[]", typeof(Quaternion[])},
+            {"NativeArray`1", typeof(NativeArray<>)}
         };
         
         private static void RefreshAssemblies()
         {
             _assemblies = new();
+            string asd = "Vector2";
+            string asd3 = "Vector3";
+            
+            //Find Unity Type ->  asd 
+            
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
             foreach (var assembly in assemblies)
             {
                 if (!assembly.IsDynamic)
                 {
-                    bool isTarget = assembly.Location.Contains("Assets") || 
-                                    assembly.Location.Contains("Assembly-CSharp") || 
+                    bool isTarget = assembly.Location.Contains("Assets") ||
+                                    assembly.Location.Contains("Assembly-CSharp") ||
                                     assembly.Location.Contains("Unity.Collections");
                     if (isTarget)
                         _assemblies.Add(assembly);
@@ -45,6 +76,13 @@ namespace SheetData.Editor.Generator
                 RefreshAssemblies();
             if(_cachedTypes.TryGetValue(typeName, out Type result))
                 return result;
+            bool isArray = false;
+            if (typeName.Contains("[]"))
+            {
+                isArray = true;
+                typeName = typeName.Replace("[]","");
+            }
+            
             foreach (var ass in _assemblies)
             {
                 var export = ass.ExportedTypes;
@@ -52,13 +90,21 @@ namespace SheetData.Editor.Generator
                 {
                     if (type.Name == typeName)
                     {
-                        _cachedTypes.Add(typeName, type);
-                        return type;
+                        var finType = type;
+                        if (isArray)
+                        {
+                            finType = ass.GetType($"{type.FullName}[]");
+                            typeName = typeName + "[]";
+                        }
+                        _cachedTypes.Add(typeName, finType);
+                        return finType;
                     }
                 }
             }
             return result;
         }
+        
+        
 
         public static (string containerType, string genericType) GetGenericType(string typeString)
         {

@@ -16,118 +16,86 @@ namespace SheetData.Editor.Generator
     {
         private static readonly Template TEMPLATE = Template.Parse(TypeModelTemplate.Template_Class);
         private HashSet<string> _missingTypes = new ();
-        private HashSet<string> _namespaceChain = new();
+        
         
         public string Generator(SheetRawData sheetData, string nameSpace)
         {
             if (!sheetData.IsValidation())
                 return "";
             var model = CreateModel(sheetData, nameSpace);
-            //sheetData.Headers
-            throw new Exception("헤더식으로 변경");
-            if (_missingTypes.Count > 0)
-            {
-                DebugLog_MissionTypes(sheetData);
-                return "";
-            }
-            else
-            {
-                return TEMPLATE.Render(model);
-            }
+            return TEMPLATE.Render(model);
         }
 
         private TypeModel CreateModel(SheetRawData data, string nameSpace)
         {
-            var m_struct = new List<MemberModel>();
-            var m_object = new List<MemberModel>();
-            var m_lwSerializable = new List<MemberModel>();
             var m_nativeArray = new List<GenericMemberModel>();
             var m_nativeRef = new List<GenericMemberModel>();
-            var ilwSerializableType = typeof(ILwSerializable);
-            _namespaceChain.Clear();
-            for (int i = 1; i < data.Rows[0].Length; i++)
+            var m_struct = new List<MemberModel>();
+            var m_lwSerializable = new List<MemberModel>();
+            var m_array = new List<MemberModel>();
+            
+            HashSet<string> namespaceChain = new();
+            foreach (var h in data.Headers)
             {
-                var fieldData = GetField(data.Rows[0][i]);
-                var propertyModel = new MemberModel(fieldData.type, fieldData.name);
-                bool haslwSerializable = ilwSerializableType.IsAssignableFrom(fieldData.typedata);
+                namespaceChain.Add(h?.type?.Namespace);
+                namespaceChain.Add(h?.genericType?.Namespace);
+            }
 
-                if (fieldData.typedata == null)
+            for (int i = 1; i < data.Headers.Count; i++)
+            {
+                var typeData = data.Headers[i];
+                if (typeData.typeString.Contains("NativeArray"))
                 {
-                    if (fieldData.type.Contains("NativeArray"))
-                    {
-                        var generic = TypeFinder.GetGenericType(fieldData.type).genericType;
-                        m_nativeArray.Add(new GenericMemberModel(fieldData.type, fieldData.name, generic));
-                        continue;
-                    }
-                    if (fieldData.type.Contains("NativeReference"))
-                    {
-                        var generic = TypeFinder.GetGenericType(fieldData.type).genericType;
-                        m_nativeRef.Add(new GenericMemberModel(fieldData.type, fieldData.name, generic));
-                        continue;
-                    }
-                    throw new Exception($"{fieldData.type} is not support type");
-                }
-                if (haslwSerializable)
-                {
-                    m_lwSerializable.Add(propertyModel);
+                    m_nativeArray.Add(new GenericMemberModel(typeData));
                     continue;
                 }
-                if (TypeFinder.IsUnmanaged(fieldData.typedata))
+                if (typeData.typeString.Contains("NativeReference"))
                 {
-                    m_struct.Add(propertyModel);
+                    m_nativeRef.Add(new GenericMemberModel(typeData));
+                    continue;
                 }
-                else
+                if (typeData.typeString == "string")
                 {
-                    if(fieldData.typedata == typeof(string))
-                        m_struct.Add(propertyModel);
-                    else
-                        throw new Exception($"{fieldData.typedata} The ILwSerializable interface is not implemented for this type." +
-                                            $" Only unmanaged types or data with the ILwSerializable interface implemented are allowed.");
+                    m_struct.Add(new MemberModel(typeData));
+                    continue;
                 }
+                if (typeData.IsUnmanaged)
+                {
+                    m_struct.Add(new MemberModel(typeData));
+                    continue;
+                }
+                if (typeData.IsLwSerializable)
+                {
+                    m_lwSerializable.Add(new MemberModel(typeData));
+                    continue;
+                }
+                if (typeData.IsArray)
+                {
+                    m_array.Add(new MemberModel(typeData));
+                    continue;
+                }
+                
+                throw new Exception($"{typeData.typeString} The ILwSerializable interface is not implemented for this type." +
+                                    $" Only unmanaged types or data with the ILwSerializable interface implemented are allowed.");
             }
-            
-            _namespaceChain.Add(typeof(LwBinaryReader).Namespace);
-            _namespaceChain.Remove(null);
+            namespaceChain.Add(typeof(LwBinaryReader).Namespace);
+            namespaceChain.Remove(null);
             //properties
             return new TypeModel
             {
                 NamespaceName = nameSpace,
                 TypeKeyword = data.TypeKeyword,
                 TypeName = data.SheetName,
-                objectMembers = m_object,
+                arrayMembers = m_array,
                 structMembers = m_struct,
                 lwSerializableMembers = m_lwSerializable,
                 nativeArray = m_nativeArray,
                 nativeRef = m_nativeRef,
-                Usings = _namespaceChain.ToList()
+                Usings = namespaceChain.ToList()
             };
         }
-        
-        private (string type, string name, Type typedata) GetField(string content)
-        {
-            var f = content.Split(' ');
-            var typeString = f.First();
-            var typeName = f.Last();
-            if (typeString.Contains("[]")) //관리형배열
-            {
-                var findType = typeString.Replace("[]", "");
-                AddNameSpaceChain(findType);
-                return (typeString, typeName, TypeFinder.Find(findType));
-            }
-            else if (typeString.Contains(">")) //제너릭
-            {
-                var data = TypeFinder.GetGenericType(typeString);
-                AddNameSpaceChain(data.containerType+"`1", data.genericType);
-                return (typeString, typeName,  TypeFinder.Find(data.containerType));
-            }
-            else
-            {
-                AddNameSpaceChain(typeString);
-                return (typeString, typeName,  TypeFinder.Find(typeString));
-            }
-        }
 
-        private void AddNameSpaceChain(params string[] typeStrings)
+        /*private void AddNameSpaceChain(params string[] typeStrings)
         {
             foreach (var typeString in typeStrings)
             {
@@ -152,7 +120,7 @@ namespace SheetData.Editor.Generator
             foreach (var type in _missingTypes)
                 missingList += $"{type} ,";
             Debug.LogError($"Failed Generator {rawData.SheetName} Sheet, TypeNotFound : {missingList}");
-        }
+        }*/
     }
     
 

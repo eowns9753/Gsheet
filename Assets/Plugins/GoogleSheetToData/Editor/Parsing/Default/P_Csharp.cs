@@ -1,9 +1,10 @@
 ﻿using System;
+using SheetData.Scripts.Parsing;
 using UnityEngine;
 
-namespace SheetData.Scripts.Parser.Default
+namespace SheetData.Editor.Parsing
 {
-    public abstract class P_Default<T> : ISheetPaserable<T>
+    public abstract class P_Default<T> : ISheetParserable<T>
     {
         public abstract T Parser(string content);
         protected void WriteError(string content)
@@ -12,7 +13,7 @@ namespace SheetData.Scripts.Parser.Default
         }
     }
 
-    public class P_string : P_Default<string>
+    /*public class P_string : P_Default<string>
     {
         public override string Parser(string content) => content;
     }
@@ -35,7 +36,7 @@ namespace SheetData.Scripts.Parser.Default
                 WriteError(content);
             return result;
         }
-    }
+    }*/
 
     /*
     public class P_Vector2 : P_Default<Vector2>
