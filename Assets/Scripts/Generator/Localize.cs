@@ -17,7 +17,6 @@ namespace SheetData.Generator
         public string CN => _CN;
         public string TW => _TW;
 
-
         void ILwSerializable.OnNativeWrite(LwBinaryWriter writer)
         {
             writer.Write(_EN);

@@ -77,11 +77,33 @@ namespace SheetData.Editor.DownLoader
             return true;
         }
 
-        public string ClassGenerator(string nameSpace)
+        public TypeModel ClassGenerator(string nameSpace)
         {
-            TypeModelGenerator generator = new TypeModelGenerator();
-            return generator.Generator(this, nameSpace);
+            return new TypeModel(this, nameSpace);
         }
+
+        public void WriteDirect(SheetBinaryWriter writer, TypeModel model)
+        {
+            writer.Write(SheetName);
+            writer.Write(_rows.Count - 1);
+            for (int i = 1; i < _rows.Count; i++)
+            {
+                var row = _rows[i];
+                if (IsDictionary())
+                    writer.Write(row[0]);
+                for (int j = 1; j < row.Length; j++)
+                {
+                    foreach (var member in model.AllMembers)
+                    {
+                        //var parser = SheetDataParser.GetParser(member.HeaderType.typeString);
+                        //writer.Write(parser.Convert(row[i]));
+                        //parser.ParseAndWrite(row[i], writer);
+                    }
+                }
+            }
+            writer.WritePadding(32);
+        }
+
 
         #region private
         void RefreshHeaderRowType()
@@ -139,6 +161,7 @@ namespace SheetData.Editor.DownLoader
             caller.Invoke(len == 0 ? "" : row.Substring(startIdx, len), splitIdx++);
         }
         #endregion
+
         
     }
 }

@@ -1,6 +1,8 @@
 ﻿using System;
 using LWBinarySerializer;
 using LWSerializer;
+using SheetData.Editor.Parsing;
+using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -49,29 +51,26 @@ namespace DefaultNamespace
     {
         public void Start()
         {
-            var datas = Write(5);
+            /*var datas = Write(5);
             Read(datas);
-
             var unmanaArr = Example_Unmanaged.Write(new Example_Unmanaged.ExampleStruct()
             {
                 m_bool = false,
                 m_float = 2.5f,
                 m_int = 123123
             });
-
             var unmana = Example_Unmanaged.Read(unmanaArr);
-
             var managedArr = Example_Managed.Write(new Example_Managed.ExampleClass()
                 { m_float = 5.5f, m_arr = new string[2] { "bbbbb", "ccccc" } });
             var mana = Example_Managed.Read(managedArr);
-
-            
             
             var bytes = LwUtility.To("hello world");
-            var data = LwUtility.From(bytes);
+            var data = LwUtility.From<string>(bytes);
             var hash = LwUtility.ToXxHash64(bytes);
-            
 
+            NativeArray<float> floatArr = new NativeArray<float>(new []{0.2f,1.2f}, Allocator.Temp);
+            var arr  = LwUtility.To(floatArr);*/
+            
         }
 
         public void Read(byte[] datas)
@@ -80,8 +79,8 @@ namespace DefaultNamespace
             reader.Read(out int count);
             for (int i = 0; i < count; i++)
             {
-                TestStruct nStruct = new TestStruct();
-                reader.ReadRef(nStruct);
+                TestStruct nStruct;
+                reader.Read(out nStruct);
             }
             Debug.Log($"Hash - {reader.GetXxHash64(15)}");
             reader.Dispose();
@@ -105,7 +104,7 @@ namespace DefaultNamespace
             LwBinaryWriter writer = new LwBinaryWriter(128);
             writer.Write(count);
             for (int i = 0; i < structs.Length; i++)
-                writer.WriteRef(structs[i]);
+                writer.Write(structs[i]);
             var result = writer.ToArray();
             Debug.Log($"Hash - {writer.GetXxHash64(15)}");
             writer.Dispose();

@@ -1,39 +1,59 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using LWSerializer;
+using Scriban;
 using SheetData.Editor.DownLoader;
+using SheetData.IO;
 
 namespace SheetData.Editor.Generator
 {
     public class TypeModel
     {
+        private static readonly Template TEMPLATE = Template.Parse(TypeModelTemplate.Template_Class);
+        
         public string NamespaceName { get; set; }
         public string TypeKeyword { get; set; } // "class" 또는 "struct"
         public string TypeName { get; set; }
         public List<string> Usings { get; set; }
-        public List<MemberModel> structMembers { get; set; } = new ();
-        public List<MemberModel> arrayMembers { get; set; } = new ();
-        public List<MemberModel> lwSerializableMembers { get; set; } = new ();
-        public List<GenericMemberModel> nativeArray { get; set; } = new ();
-        public List<GenericMemberModel> nativeRef { get; set; } = new ();
-    }
-    
-    public class MemberModel
-    {
-        public string Type { get; set; }
-        public string Name { get; set; }
-
-        public MemberModel(HeaderType typeData)
+        //반드시 Write순서와 동일하게 유지 해 주 세 요
+        public List<MemberModel> Members { get; set; } = new ();
+        
+        public TypeModel(SheetRawData data, string nameSpace)
         {
-            Type = typeData.typeString;
-            Name = typeData.memberName;
+            HashSet<string> namespaceChain = new();
+            foreach (var h in data.Headers)
+            {
+                namespaceChain.Add(h?.type?.Namespace);
+                namespaceChain.Add(h?.genericType?.Namespace);
+            }
+
+            for (int i = 1; i < data.Headers.Count; i++)
+            {
+                var typeData = data.Headers[i];
+                Members.Add(new  MemberModel(typeData));
+            }
+
+            namespaceChain.Add(typeof(LwBinaryReader).Namespace);
+            namespaceChain.Remove(null);
+            NamespaceName = nameSpace;
+            TypeKeyword = data.TypeKeyword;
+            TypeName = data.SheetName;
+            Usings = namespaceChain.ToList();
         }
-    }
-
-    public class GenericMemberModel : MemberModel
-    {
-        public string Generic1 { get; set; }
-        public GenericMemberModel(HeaderType typeData) : base(typeData)
+        
+        public IEnumerable<MemberModel> AllMembers
         {
-            Generic1 = typeData.genericType.Name;
+            get
+            {
+                // 반드시 Write 순서와 동일하게 반환합니다.
+                foreach (var m in Members) yield return m;
+            }
+        }
+
+        public string Generator()
+        {
+            return TEMPLATE.Render(this);
         }
     }
     
@@ -47,76 +67,25 @@ namespace {{ namespace_name }}
 {
     public partial {{ type_keyword }} {{ type_name }} : ILwSerializable
     {
-        {{~ for prop in struct_members ~}}
-        private {{ prop.type }} _{{ prop.name }};
-        {{~ end ~}}
-        {{~ for prop in array_members ~}}
-        private {{ prop.type }} _{{ prop.name }};
-        {{~ end ~}}
-        {{~ for prop in lw_serializable_members ~}}
-        private {{ prop.type }} _{{ prop.name }};
-        {{~ end ~}}
-        {{~ for prop in native_array ~}}
-        private {{ prop.type }} _{{ prop.name }};
-        {{~ end ~}}
-        {{~ for prop in native_ref ~}}
+        {{~ for prop in members ~}}
         private {{ prop.type }} _{{ prop.name }};
         {{~ end ~}}
 
-        {{~ for prop in struct_members ~}}
+        {{~ for prop in members ~}}
         public {{ prop.type }} {{ prop.name }} => _{{ prop.name }};
         {{~ end ~}}
-        {{~ for prop in array_members ~}}
-        public {{ prop.type }} {{ prop.name }} => _{{ prop.name }};
-        {{~ end ~}}
-        {{~ for prop in lw_serializable_members ~}}
-        public {{ prop.type }} {{ prop.name }} => _{{ prop.name }};
-        {{~ end ~}}
-        {{~ for prop in native_array ~}}
-        public {{ prop.type }} {{ prop.name }} => _{{ prop.name }};
-        {{~ end ~}}
-        {{~ for prop in native_ref ~}}
-        public {{ prop.type }} {{ prop.name }} => _{{ prop.name }};
-        {{~ end ~}}
-
 
         void ILwSerializable.OnNativeWrite(LwBinaryWriter writer)
         {
-            {{~ for prop in struct_members ~}}
+            {{~ for prop in members ~}}
             writer.Write(_{{ prop.name }});
-            {{~ end ~}}
-            {{~ for prop in array_members ~}}
-            writer.Write(_{{ prop.name }});
-            {{~ end ~}}
-            {{~ for prop in lw_serializable_members ~}}
-            writer.WriteRef(_{{ prop.name }});
-            {{~ end ~}}
-            {{~ for prop in native_array ~}}
-            writer.WriteSpan<{{ prop.generic1 }}>(_{{ prop.name }}.AsSpan());
-            {{~ end ~}}
-            {{~ for prop in native_ref ~}}
-            writer.Write(_{{ prop.name }}.Value);
             {{~ end ~}}
         }
 
         void ILwSerializable.OnNativeRead(LwBinaryReader reader)
         {
-            {{~ for prop in struct_members ~}}
+            {{~ for prop in members ~}}
             reader.Read(out _{{ prop.name }});
-            {{~ end ~}}
-            {{~ for prop in array_members ~}}
-            reader.Read(out _{{ prop.name }});
-            {{~ end ~}}
-            {{~ for prop in lw_serializable_members ~}}
-            reader.ReadRef(_{{ prop.name }});
-            {{~ end ~}}
-            {{~ for prop in native_array ~}}
-            _{{ prop.name }} = new NativeArray<{{ prop.generic1 }}>(reader.PeekSpanLength<{{ prop.generic1 }}>(), Allocator.Persistent);
-            reader.ReadSpan(_{{ prop.name }}.AsSpan());
-            {{~ end ~}}
-            {{~ for prop in native_ref ~}}
-            _{{ prop.name }} = new NativeReference<{{ prop.generic1 }}>(Allocator.Persistent);
-            _{{ prop.name }}.Value = reader.Read<{{ prop.generic1 }}>();
             {{~ end ~}}
         }
     }

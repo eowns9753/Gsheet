@@ -4,7 +4,9 @@ using System.Text;
 using System.Threading.Tasks;
 using LWSerializer;
 using SheetData.Editor.DownLoader;
+using SheetData.Editor.Generator;
 using SheetData.Editor.Utils;
+using SheetData.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -46,9 +48,20 @@ namespace SheetData.Editor
                         throw new Exception($"Header {header.originalText} is missing type");
                 }        
             }
+
+            Dictionary<string, TypeModel> modelMap = new Dictionary<string, TypeModel>();
+            SheetBinaryWriter writer = SheetBinaryWriter.Create("sheetData.bytes");
             foreach (var sheetData in sheetDatas)
             {
-                var generatorCode= sheetData.ClassGenerator(target.GeneratorNameSpace);
+                modelMap.Add(sheetData.SheetName, sheetData.ClassGenerator(target.GeneratorNameSpace));
+                sheetData.WriteDirect(writer, modelMap[sheetData.SheetName]);
+            }
+            writer.Dispose();
+            
+            
+            foreach (var sheetData in sheetDatas)
+            {
+                var generatorCode = modelMap[sheetData.SheetName].Generator();
                 if (generatorCode != "")
                 {
                     string path = IOUtils.GetSystemPath($"{target.CodeGeneratorPos}/{sheetData.SheetName}.cs");
@@ -56,17 +69,6 @@ namespace SheetData.Editor
                 }
             }
             AssetDatabase.Refresh();
-            await Task.Delay(100);
-            
-            
-            
-            //LwBinaryWriter writer = new LwBinaryWriter();
-            foreach (var sheetData in sheetDatas)
-            {
-                var instance = Activator.CreateInstance(sheetData.SheetNameToType);
-                bool isDic = sheetData.IsDictionary();
-            }
-            //writer
         }
         
         async Task RefreshSheetNames(SheetDataSettingScriptable target)

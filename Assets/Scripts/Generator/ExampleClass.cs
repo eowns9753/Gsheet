@@ -18,7 +18,6 @@ namespace SheetData.Generator
         public int[] arr => _arr;
         public TestEnum[] properties => _properties;
 
-
         void ILwSerializable.OnNativeWrite(LwBinaryWriter writer)
         {
             writer.Write(_localizeName);

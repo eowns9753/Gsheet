@@ -1,4 +1,5 @@
-﻿using System;
+﻿/*using System;
+using LWSerializer;
 using SheetData.Scripts.Parsing;
 using UnityEngine;
 
@@ -13,9 +14,13 @@ namespace SheetData.Editor.Parsing
         }
     }
 
-    /*public class P_string : P_Default<string>
+    public class P_string : P_Default<string>
     {
         public override string Parser(string content) => content;
+        public override void ParseAndWrite(string strData, LwBinaryWriter writer)
+        {
+            writer.Write(Parser(strData));
+        }
     }
 
     public class P_int : P_Default<int>
@@ -25,6 +30,11 @@ namespace SheetData.Editor.Parsing
             if(!int.TryParse(content, out int result))
                 WriteError(content);
             return result;
+        }
+
+        public override void ParseAndWrite(string strData, LwBinaryWriter writer)
+        {
+            writer.Write(Parser(strData));
         }
     }
     
@@ -36,7 +46,12 @@ namespace SheetData.Editor.Parsing
                 WriteError(content);
             return result;
         }
-    }*/
+
+        public override void ParseAndWrite(string strData, LwBinaryWriter writer)
+        {
+            writer.Write(Parser(strData));
+        }
+    }
 
     /*
     public class P_Vector2 : P_Default<Vector2>
@@ -45,5 +60,5 @@ namespace SheetData.Editor.Parsing
         {
             
         }
-    }*/
-}
+    }#1#
+}*/

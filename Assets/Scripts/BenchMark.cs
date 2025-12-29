@@ -74,7 +74,7 @@ namespace DefaultNamespace
         {
             stp.Restart();
             for (int i = 0; i < count; i++)
-                writer.WriteRef(b);
+                writer.Write(b);
             stp.Stop();
             Debug.Log($"{nameof(WriteTofuMem)} {count:N0} cycle({writer.Length/1000000} MB), {stp.ElapsedMilliseconds} ms");
         }
@@ -113,15 +113,15 @@ namespace DefaultNamespace
                 VecArr = new Vector2[10]
             };
             LwBinaryWriter writer = new LwBinaryWriter(512);
-            writer.WriteRef(strudummy);
+            writer.Write(strudummy);
             
             LwBinaryReader reader = new LwBinaryReader(writer.ToPtr());
             
             stp.Restart();
             for (int i = 0; i < count; i++)
             {
-                BenchExample stru = new ();
-                reader.ReadRef(stru);
+                BenchExample stru;
+                reader.Read(out stru);
                 reader.SetPosition(0);
             }
             stp.Stop();

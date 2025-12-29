@@ -14,7 +14,7 @@ namespace SheetData.IO
         {
         }
 
-        public static async Task<SheetBinaryWriter> Create(string filename)
+        public static SheetBinaryWriter Create(string filename)
         {
             SheetBinaryWriter result = new();
             result._fileName = filename;
