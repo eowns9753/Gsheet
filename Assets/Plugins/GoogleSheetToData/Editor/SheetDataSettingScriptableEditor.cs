@@ -56,6 +56,7 @@ namespace SheetData.Editor
                 modelMap.Add(sheetData.SheetName, sheetData.ClassGenerator(target.GeneratorNameSpace));
                 sheetData.WriteDirect(writer, modelMap[sheetData.SheetName]);
             }
+            Debug.Log($"size {writer.Length}");
             writer.Dispose();
             
             

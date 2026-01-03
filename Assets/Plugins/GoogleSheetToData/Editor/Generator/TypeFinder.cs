@@ -61,9 +61,13 @@ namespace SheetData.Editor.Generator
             {
                 if (!assembly.IsDynamic)
                 {
+                    string sheet = nameof(SheetData);
+                    string sheetEdit = $"{sheet}.Editor";
                     bool isTarget = assembly.Location.Contains("Assets") ||
                                     assembly.Location.Contains("Assembly-CSharp") ||
-                                    assembly.Location.Contains("Unity.Collections");
+                                    assembly.Location.Contains("Unity.Collections") ||
+                                    assembly.Location.Contains(sheet) ||
+                                    assembly.Location.Contains(sheetEdit);
                     if (isTarget)
                         _assemblies.Add(assembly);
                 }  
@@ -102,6 +106,26 @@ namespace SheetData.Editor.Generator
                 }
             }
             return result;
+        }
+
+        public static Type[] GetAssignableFroms<T>()
+        {
+            var baseType = typeof(T);
+            if(_assemblies == null)
+                RefreshAssemblies();
+            List<Type> result = new List<Type>();
+            foreach (var ass in _assemblies)
+            {
+                var export = ass.ExportedTypes;
+                foreach (var type in export)
+                {
+                    if(type.IsInterface || type.IsAbstract)
+                        continue;
+                    if (baseType != type && baseType.IsAssignableFrom(type))
+                        result.Add(type);
+                }
+            }
+            return result.ToArray();
         }
         
         

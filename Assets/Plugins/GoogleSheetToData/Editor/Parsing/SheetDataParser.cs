@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using System.Collections.Generic;
 using System.Linq;
 using SheetData.Editor.Generator;
@@ -11,13 +11,13 @@ namespace SheetData.Editor.Parsing
     {
         private static Dictionary<string, ISheetParserable> _parserMap = null;
         
-        public static IParserFormatter GetParser(Type dataType, string typeString)
+        public static OnWriteHandler GetParser(Type dataType)
         {
             if(_parserMap == null || _parserMap.Count == 0)
                 RefreshParser();
-
-            var formatter = ParserFormatter.GetFormatter(dataType, typeString);
-            return formatter;
+            throw new NotImplementedException();
+            //var formatter = ParserFormatter.GetFormatter(dataType, typeString);
+            //return formatter;
         }
 
         private static void RefreshParser()
@@ -95,4 +95,4 @@ namespace SheetData.Editor.Parsing
             return "";
         }
     }
-}
+}*/

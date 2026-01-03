@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using LWSerializer;
 using SheetData.Editor.Generator;
-using SheetData.Editor.Parsing;
 using SheetData.IO;
+using SheetData.Scripts.Parsing;
 using UnityEngine;
 
 namespace SheetData.Editor.DownLoader
@@ -93,12 +93,8 @@ namespace SheetData.Editor.DownLoader
                     writer.Write(row[0]);
                 for (int j = 1; j < row.Length; j++)
                 {
-                    foreach (var member in model.AllMembers)
-                    {
-                        //var parser = SheetDataParser.GetParser(member.HeaderType.typeString);
-                        //writer.Write(parser.Convert(row[i]));
-                        //parser.ParseAndWrite(row[i], writer);
-                    }
+                    var contentType = _headers[j].type;
+                    ParserFormatter.Get(contentType).Write(contentType, row[j], writer);
                 }
             }
             writer.WritePadding(32);
