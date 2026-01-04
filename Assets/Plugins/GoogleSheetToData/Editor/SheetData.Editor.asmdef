@@ -3,7 +3,8 @@
     "rootNamespace": "SheetData.Editor",
     "references": [
         "GUID:b5772dcfbf60cd649bd11f8a02542966",
-        "GUID:201749b784b4f0941b2ef6859c261a2b"
+        "GUID:201749b784b4f0941b2ef6859c261a2b",
+        "GUID:e0cd26848372d4e5c891c569017e11f1"
     ],
     "includePlatforms": [
         "Editor"

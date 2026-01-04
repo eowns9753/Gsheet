@@ -31,8 +31,12 @@ namespace SheetData.Scripts.Parsing
             T[] result = new T[arr.Length];
             for (int i = 0; i < arr.Length; i++)
             {
-                var castResult = ParserFormatter.Get(typeof(T)).FromString(contentType, arr[i]);
-                result[i] = (T)castResult;
+                object obj = null;
+                if (arr[i] == "")
+                    obj = default(T); 
+                else
+                    obj = ParserFormatter.Get(typeof(T)).FromString(contentType, arr[i]);
+                result[i] = (T)obj;
             }
             return result;
         }

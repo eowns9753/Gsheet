@@ -13,6 +13,7 @@ namespace SheetData.Scripts.Parsing
     {
         private static Dictionary<string, ___IParserFormatter> _parsers;
         private static Format_Enum _enumFormat = new();
+        private static Format_EnumArray _enumArrayFormat = new();
         
         static ParserFormatter()
         {
@@ -30,7 +31,15 @@ namespace SheetData.Scripts.Parsing
             }
             else
             {
-                _parsers.TryGetValue(type.Name, out formatter);
+                if (type.IsArray && type.GetElementType().IsEnum)
+                {
+                    formatter = _enumArrayFormat;
+                }
+                else
+                {
+                    _parsers.TryGetValue(type.Name, out formatter);
+                }
+                
             }
             if(formatter == null)
                 throw new Exception($"{type.Name} formatter not found");
@@ -53,7 +62,6 @@ namespace SheetData.Scripts.Parsing
                 var formatter = (___IParserFormatter)Activator.CreateInstance(formatterType);
                 AddManual(formatter);
             }
-            //HeaderType  
         }
     }
 
