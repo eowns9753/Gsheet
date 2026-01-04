@@ -50,15 +50,16 @@ namespace SheetData.Editor
             }
 
             Dictionary<string, TypeModel> modelMap = new Dictionary<string, TypeModel>();
-            SheetBinaryWriter writer = SheetBinaryWriter.Create("sheetData.bytes");
+            SheetBinaryWriter writer = SheetBinaryWriter.Create(SheetDataSettingScriptable.BinaryFileName);
+            writer.Write(sheetDatas.Count);
             foreach (var sheetData in sheetDatas)
             {
                 modelMap.Add(sheetData.SheetName, sheetData.ClassGenerator(target.GeneratorNameSpace));
                 sheetData.WriteDirect(writer, modelMap[sheetData.SheetName]);
             }
             Debug.Log($"size {writer.Length}");
+            writer.Save();
             writer.Dispose();
-            
             
             foreach (var sheetData in sheetDatas)
             {
@@ -82,6 +83,39 @@ namespace SheetData.Editor
                 EditorUtility.SetDirty(target);
             }
         }
+
+        void LoadTest(SheetDataSettingScriptable target)
+        {
+            SheetBinaryReader reader = SheetBinaryReader.Create(SheetDataSettingScriptable.BinaryFileName);
+            reader.Read(out int sheetCount);
+            for (int i = 0; i < sheetCount; i++)
+            {
+                reader.Read(out SheetInfo info); 
+                var type = TypeFinder.Find(info.SheetName);
+                Dictionary<string, object> temp = new();
+                List<object> tempList = new();
+                
+                for (int j = 0; j < info.DataCount; j++)
+                {
+                    Debug.Log($"{j}/{info.DataCount}    start");
+                    var instance = (ILwSerializable)Activator.CreateInstance(type);
+                    if (info.IsDictionary)
+                    {
+                        reader.Read(out string key);
+                        instance.OnNativeRead(reader);
+                        temp.Add(key, instance);
+                    }
+                    else
+                    {
+                        instance.OnNativeRead(reader);
+                        tempList.Add(instance);
+                    }
+                }
+                reader.ReadPadding(32);
+            }
+            
+            reader.Dispose();
+        }
         
         public override void OnInspectorGUI()
         {
@@ -103,8 +137,7 @@ namespace SheetData.Editor
             
             if (GUILayout.Button("StartDebug"))
             {
-                _ = RefreshSheetNames(scriptable);
-                scriptable.StartDebug();
+                LoadTest(scriptable);
             }
         }
     }

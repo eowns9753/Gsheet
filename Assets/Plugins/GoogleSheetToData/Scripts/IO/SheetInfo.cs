@@ -13,7 +13,7 @@ namespace SheetData.IO
         public string SheetName => _sheetName;
         public string Gid => _gid;
         public int DataCount => _dataCount;
-        
+        public bool IsDictionary => _isDictionary;
         public SheetInfo(string sheetName, string gid)
         {
             _sheetName = sheetName;

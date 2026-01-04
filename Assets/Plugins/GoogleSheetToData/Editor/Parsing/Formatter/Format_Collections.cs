@@ -4,45 +4,62 @@ using Unity.Collections;
 
 namespace SheetData.Scripts.Parsing
 {
-    public class Format_NativeArray<T> : ParserFormatterBase<NativeArray<T>>
-        where T : unmanaged
+    [ParserTrigger(typeof(NativeArray<>))]
+    public class Format_NativeArray<T> : IParserFormatter where T : unmanaged
     {
-        public override object FromString(Type contentType, string content)
+        public void Write(string content, SheetBinaryWriter writer)
         {
-            var contents = ToSplited(content);
-            NativeArray<T> array = new NativeArray<T>(contents.Length, Allocator.Temp);
-            for (int i = 0; i < contents.Length; i++)
+            var items = StringArray.Convert(content);
+            writer.Write(items.Count);
+            for (int i = 0; i < items.Count; i++)
             {
-                var elementType = contentType.GetGenericArguments()[0];
-                var data = ParserFormatter.Get(elementType).FromString(elementType, contents[i]);
-                array[i] = (T)data;
+                ParserFormatter.Get(typeof(T)).Write(items[i], writer);
             }
-            return array;
         }
+    }
 
-        public override void Write(Type contentType, string content, SheetBinaryWriter writer)
+    [ParserTrigger(typeof(NativeReference<>))]
+    public class Format_NativeReference<T> : IParserFormatter where T : unmanaged
+    {
+        public void Write(string content, SheetBinaryWriter writer)
         {
-            var data = FromString(contentType, content);
-            writer.Write((NativeArray<T>)data);
+            ParserFormatter.Get(typeof(T)).Write(content, writer);
         }
     }
     
-    public class Format_NativeReference<T> : ParserFormatterBase<NativeReference<T>>
-        where T : unmanaged
+    [ParserTrigger(typeof(FixedString32Bytes))]
+    public class Format_FixedString32 : IParserFormatter
     {
-        public override object FromString(Type contentType, string content)
-        {
-            NativeReference<T> reference = new NativeReference<T>();
-            var elementType = contentType.GetGenericArguments()[0];
-            reference.Value = (T)ParserFormatter.Get(elementType).FromString(elementType, content);
-            return reference;
-        }
-
-        public override void Write(Type contentType, string content, SheetBinaryWriter writer)
-        {
-            var data = FromString(contentType, content);
-            writer.Write((NativeReference<T>)data);
-        }
+        public void Write(string content, SheetBinaryWriter writer) => 
+            writer.Write( new FixedString32Bytes(content));
+    }
+    
+    [ParserTrigger(typeof(FixedString64Bytes))]
+    public class Format_FixedString64 : IParserFormatter
+    {
+        public void Write(string content, SheetBinaryWriter writer) => 
+            writer.Write( new FixedString64Bytes(content));
+    }
+    
+    [ParserTrigger(typeof(FixedString128Bytes))]
+    public class Format_FixedString128 : IParserFormatter
+    {
+        public void Write(string content, SheetBinaryWriter writer) => 
+            writer.Write( new FixedString128Bytes(content));
+    }
+    
+    [ParserTrigger(typeof(FixedString512Bytes))]
+    public class Format_FixedString512 : IParserFormatter
+    {
+        public void Write(string content, SheetBinaryWriter writer) => 
+            writer.Write( new FixedString512Bytes(content));
+    }
+    
+    [ParserTrigger(typeof(FixedString4096Bytes))]
+    public class Format_FixedString4096 : IParserFormatter
+    {
+        public void Write(string content, SheetBinaryWriter writer) => 
+            writer.Write( new FixedString4096Bytes(content));
     }
 
 }

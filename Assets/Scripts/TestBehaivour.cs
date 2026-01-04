@@ -35,7 +35,6 @@ namespace DefaultNamespace
                 var primaryType2 = typeof(string);
                 var twogenericType = typeof(Dictionary<string, int>);
                 var twogenericType2 = typeof(Dictionary<int, char>);
-                ParserFormatter.RefreshParser();
                 /*BenchMark m = new BenchMark();
                 m.Start();*/
                 SerializeTest t = new();

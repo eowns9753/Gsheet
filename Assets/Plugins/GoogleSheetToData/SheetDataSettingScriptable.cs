@@ -14,6 +14,7 @@ namespace SheetData
     public class SheetDataSettingScriptable : ScriptableObject
     {
         public const string FileName = "Setting.asset";
+        public const string BinaryFileName = "sheetData.bytes";
         public static SheetDataSettingScriptable Instance = null;
         
         [SerializeField] private string _codeGeneratorPos = "Scripts/Generator";

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using SheetData.Editor.DownLoader;
 using SheetData.Editor.Generator;
 using SheetData.IO;
 using UnityEditor;
+using UnityEngine;
 
 namespace SheetData.Scripts.Parsing
 {
@@ -11,77 +13,89 @@ namespace SheetData.Scripts.Parsing
     [InitializeOnLoad]
     public static class ParserFormatter
     {
-        private static Dictionary<string, ___IParserFormatter> _parsers;
-        private static Format_Enum _enumFormat = new();
-        private static Format_EnumArray _enumArrayFormat = new();
+        private static Dictionary<Type, IParserFormatter> _singleParser;
+        private static Dictionary<Type, GenericParserFactory> _parserFactories;
+        private static Format_String _stringFormat;
+        private static GenericParserFactory _arrayFormat;
+        private static GenericParserFactory _enumFormat;
+        private static GenericParserFactory _primitiveFormat;
         
         static ParserFormatter()
         {
             RefreshParser();
+            _stringFormat = new Format_String();
+            _arrayFormat = new GenericParserFactory(typeof(Format_ArrayFormatter<>));
+            _enumFormat = new GenericParserFactory(typeof(Format_Enum<>));
+            _primitiveFormat = new GenericParserFactory(typeof(Format_Primitive<>));
         }
         
-
-        public static ___IParserFormatter Get(Type type)
+        public static IParserFormatter Get(Type type)
         {
-            ___IParserFormatter formatter = null;
-            
+            IParserFormatter formatter = null;
+            if (type == typeof(string))
+                return _stringFormat;
+            if (type.IsGenericType)
+            {
+                if(_parserFactories.TryGetValue(type.GetGenericTypeDefinition(), out var factory))
+                    return factory.GetFormatter(type.GetGenericArguments()[0]);
+            }
+            if (type.IsArray)
+                return _arrayFormat.GetFormatter(type);
             if (type.IsEnum)
-            {
-                formatter = _enumFormat;
-            }
-            else
-            {
-                if (type.IsArray && type.GetElementType().IsEnum)
-                {
-                    formatter = _enumArrayFormat;
-                }
-                else
-                {
-                    _parsers.TryGetValue(type.Name, out formatter);
-                }
-                
-            }
+                return _enumFormat.GetFormatter(type);
+            if (type.IsPrimitive)
+                return _primitiveFormat.GetFormatter(type);
+            
+            _singleParser.TryGetValue(type, out formatter);
+            
             if(formatter == null)
                 throw new Exception($"{type.Name} formatter not found");
             return formatter;
         }
-
-        public static void AddManual<T>(ParserFormatterBase<T> formatter) => AddManual((___IParserFormatter)formatter);
-        
-        private static void AddManual(___IParserFormatter formatter)
+      
+        private static void AddManual(IParserFormatter formatter)
         {
-            _parsers.Add(formatter.TypeName, formatter);
+            var trigger = GetTriggerType(formatter.GetType());
+            _singleParser.Add(trigger, formatter);
+        }
+
+        private static Type GetTriggerType(Type type, bool ignoreError = false)
+        {
+            var attribute = type.GetCustomAttribute<ParserTriggerAttribute>();
+            if(!ignoreError && attribute == null)
+                throw new Exception($"{type.Name} Parser trigger not found, Use Attribute 'ParserTriggerAttribute'");
+            return attribute?.TriggerType;
         }
         
-        public static void RefreshParser()
+        private static void RefreshParser()
         {
-            _parsers = new();
-            var types = TypeFinder.GetAssignableFroms<___IParserFormatter>();
+            _singleParser = new();
+            _parserFactories = new Dictionary<Type, GenericParserFactory>();
+            var types = TypeFinder.GetAssignableFroms<IParserFormatter>();
             foreach (var formatterType in types)
             {
-                var formatter = (___IParserFormatter)Activator.CreateInstance(formatterType);
-                AddManual(formatter);
+                if(formatterType.IsAbstract || formatterType.IsInterface)
+                    continue;
+                
+                if (formatterType.IsGenericType)
+                {
+                    if(formatterType.GetGenericArguments().Length != 1)
+                        throw new Exception($"{formatterType.Name} formatter type doesn't have 1 generic argument");
+                    
+                    if (!_parserFactories.ContainsKey(formatterType))
+                    {
+                        IParserFormatter dummy = null;
+                        var trigger = GetTriggerType(formatterType, true);
+                        if(trigger != null)
+                            _parserFactories.Add(trigger, new GenericParserFactory(formatterType));
+                    }
+                }
+                else
+                {
+                    var formatter = (IParserFormatter)Activator.CreateInstance(formatterType);
+                    AddManual(formatter);
+                }
             }
         }
-    }
-
-    public abstract class ParserFormatterBase<T> : ___IParserFormatter
-    {
-        public string TypeName => typeof(T).Name;
-        public abstract object FromString(Type contentType, string content);
-
-        public abstract void Write(Type contentType, string content, SheetBinaryWriter writer);
-        public string[] ToSplited(string content)
-        {
-            return content.Split(',');
-        }
-    }
-    
-    public interface ___IParserFormatter
-    {
-        public string TypeName { get; }
-        public object FromString(Type contentType, string content);
-        public void Write(Type contentType, string content, SheetBinaryWriter writer);
-        
     }
 }

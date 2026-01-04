@@ -31,6 +31,7 @@ namespace SheetData.Editor.DownLoader
                 var generic = TypeFinder.GetGenericType(typeString);
                 type = TypeFinder.Find($"{generic.containerType}`1");
                 genericType = TypeFinder.Find(generic.genericType);
+                type = type.MakeGenericType(genericType);
             }
             else
             {

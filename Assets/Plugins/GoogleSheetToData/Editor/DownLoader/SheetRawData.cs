@@ -5,6 +5,7 @@ using LWSerializer;
 using SheetData.Editor.Generator;
 using SheetData.IO;
 using SheetData.Scripts.Parsing;
+using Unity.Collections;
 using UnityEngine;
 
 namespace SheetData.Editor.DownLoader
@@ -84,8 +85,7 @@ namespace SheetData.Editor.DownLoader
 
         public void WriteDirect(SheetBinaryWriter writer, TypeModel model)
         {
-            writer.Write(SheetName);
-            writer.Write(_rows.Count - 1);
+            writer.Write(_sheetInfo);
             for (int i = 1; i < _rows.Count; i++)
             {
                 var row = _rows[i];
@@ -94,7 +94,7 @@ namespace SheetData.Editor.DownLoader
                 for (int j = 1; j < row.Length; j++)
                 {
                     var contentType = _headers[j].type;
-                    ParserFormatter.Get(contentType).Write(contentType, row[j], writer);
+                    ParserFormatter.Get(contentType).Write(row[j], writer);
                 }
             }
             writer.WritePadding(32);

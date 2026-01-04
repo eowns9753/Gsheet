@@ -15,10 +15,17 @@ namespace SheetData.IO
         private SheetBinaryReader(byte[] binaryData) : base(binaryData)
         { }
 
-        public static async Task<SheetBinaryReader> Create(string fileName)
+        public static async Task<SheetBinaryReader> CreateAsync(string fileName)
         {
-            var path = Path.Combine(Application.persistentDataPath, fileName);
+            var path = Path.Combine(Application.dataPath, fileName);
             var bytes = await File.ReadAllBytesAsync(path);
+            SheetBinaryReader result = new(bytes);
+            return result;
+        }
+        public static SheetBinaryReader Create(string fileName)
+        {
+            var path = Path.Combine(Application.dataPath, fileName);
+            var bytes = File.ReadAllBytes(path);
             SheetBinaryReader result = new(bytes);
             return result;
         }

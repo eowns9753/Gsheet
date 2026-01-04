@@ -23,7 +23,7 @@ namespace SheetData.IO
 
         public void Save()
         {
-            var path = Path.Combine(Application.persistentDataPath, _fileName);
+            var path = Path.Combine(Application.dataPath, _fileName);
             ReadOnlySpan<byte> binarySpan = ToPtr().AsSpan(Length);
             var dir = Path.GetDirectoryName(path);
             if (!Directory.Exists(dir))
