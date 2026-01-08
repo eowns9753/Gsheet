@@ -40,7 +40,7 @@ namespace SheetData.Scripts.Parsing
                     return factory.GetFormatter(type.GetGenericArguments()[0]);
             }
             if (type.IsArray)
-                return _arrayFormat.GetFormatter(type);
+                return _arrayFormat.GetFormatter(type.GetElementType());
             if (type.IsEnum)
                 return _enumFormat.GetFormatter(type);
             if (type.IsPrimitive)

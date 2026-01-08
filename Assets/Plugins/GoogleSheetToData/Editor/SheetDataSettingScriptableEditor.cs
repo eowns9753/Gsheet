@@ -97,7 +97,6 @@ namespace SheetData.Editor
                 
                 for (int j = 0; j < info.DataCount; j++)
                 {
-                    Debug.Log($"{j}/{info.DataCount}    start");
                     var instance = (ILwSerializable)Activator.CreateInstance(type);
                     if (info.IsDictionary)
                     {

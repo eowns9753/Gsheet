@@ -11,13 +11,19 @@ namespace SheetData.Scripts.Parsing
     /// </summary>
     public class Format_ArrayFormatter<T> : IParserFormatter
     {
-        public void Write(string content, SheetBinaryWriter writer)
+        public object ToData(string content)
         {
             var contents = StringArray.Convert(content);
-            var elementParser = ParserFormatter.Get(typeof(T).GetElementType());
-            writer.Write(contents.Count);
+            var elementParser = ParserFormatter.Get(typeof(T));
+            T[] newArray = new T[contents.Count];
             for (int i = 0; i < contents.Count; i++)
-                elementParser.Write(contents[i], writer);
+                newArray[i] = (T)elementParser.ToData(contents[i]);
+            return newArray;
+        }
+
+        public void Write(string content, SheetBinaryWriter writer)
+        {
+            writer.Write((T[])ToData(content));
         }
     }
 }

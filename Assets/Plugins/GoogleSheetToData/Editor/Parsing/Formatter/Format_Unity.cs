@@ -9,13 +9,18 @@ namespace SheetData.Scripts.Parsing
     [ParserTrigger(typeof(Vector2))]
     public class Format_Vector2 : IParserFormatter
     {
-        public void Write(string content, SheetBinaryWriter writer)
+        public object ToData(string content)
         {
             var span = content.AsSpan().Trim(new char[] { '{', '}', '(', ')' });
             int commaIndex = span.IndexOf(',');
             float x = float.Parse(span.Slice(0, commaIndex), NumberStyles.Float, CultureInfo.InvariantCulture);
             float y = float.Parse(span.Slice(commaIndex + 1), NumberStyles.Float, CultureInfo.InvariantCulture);
-            writer.Write(new Vector2(x, y));
+            return new Vector2(x, y);
+        }
+
+        public void Write(string content, SheetBinaryWriter writer)
+        {
+            writer.Write((Vector2)ToData(content));
         }
     }
     [ParserTrigger(typeof(Vector3))]
@@ -23,7 +28,7 @@ namespace SheetData.Scripts.Parsing
     {
         public Type Type => typeof(Vector3);
 
-        public void Write(string content, SheetBinaryWriter writer)
+        public object ToData(string content)
         {
             var span = content.AsSpan().Trim(new char[] { '{', '}', '(', ')' });
             int firstComma = span.IndexOf(',');
@@ -32,7 +37,12 @@ namespace SheetData.Scripts.Parsing
             int secondComma = remaining.IndexOf(',');
             float y = float.Parse(remaining.Slice(0, secondComma), NumberStyles.Float, CultureInfo.InvariantCulture);
             float z = float.Parse(remaining.Slice(secondComma + 1), NumberStyles.Float, CultureInfo.InvariantCulture);
-            writer.Write(new Vector3(x, y, z));
+            return new Vector3(x, y, z);
+        }
+        
+        public void Write(string content, SheetBinaryWriter writer)
+        {
+            writer.Write((Vector3)ToData(content));
         }
     }
     [ParserTrigger(typeof(Vector2Int))]
@@ -40,13 +50,18 @@ namespace SheetData.Scripts.Parsing
     {
         public Type Type => typeof(Vector2Int);
 
-        public void Write(string content, SheetBinaryWriter writer)
+        public object ToData(string content)
         {
             var span = content.AsSpan().Trim(new char[] { '{', '}', '(', ')' });
             int commaIndex = span.IndexOf(',');
             int x = int.Parse(span.Slice(0, commaIndex), NumberStyles.Integer, CultureInfo.InvariantCulture);
             int y = int.Parse(span.Slice(commaIndex + 1), NumberStyles.Integer, CultureInfo.InvariantCulture);
-            writer.Write(new Vector2Int(x, y));
+            return new Vector2Int(x, y);
+        }
+        
+        public void Write(string content, SheetBinaryWriter writer)
+        {
+            writer.Write((Vector2Int)ToData(content));    
         }
     }
     [ParserTrigger(typeof(Vector3Int))]
@@ -54,7 +69,7 @@ namespace SheetData.Scripts.Parsing
     {
         public Type Type => typeof(Vector3Int);
 
-        public void Write(string content, SheetBinaryWriter writer)
+        public object ToData(string content)
         {
             var span = content.AsSpan().Trim(new char[] { '{', '}', '(', ')' });
             int firstComma = span.IndexOf(',');
@@ -63,7 +78,12 @@ namespace SheetData.Scripts.Parsing
             int secondComma = remaining.IndexOf(',');
             int y = int.Parse(remaining.Slice(0, secondComma), NumberStyles.Integer, CultureInfo.InvariantCulture);
             int z = int.Parse(remaining.Slice(secondComma + 1), NumberStyles.Integer, CultureInfo.InvariantCulture);
-            writer.Write(new Vector3Int(x, y, z));
+            return new Vector3Int(x, y, z);
+        }
+        
+        public void Write(string content, SheetBinaryWriter writer)
+        {
+            writer.Write((Vector3Int)ToData(content));
         }
     }
 }

@@ -9,17 +9,24 @@ namespace DefaultNamespace
     [ParserTrigger(typeof(StructNameTest))]
     public class Format_StructNameTest : IParserFormatter
     {
-        public void Write(string content, SheetBinaryWriter writer)
+        public object ToData(string content)
         {
             int.TryParse(content, out var result);
-            writer.Write(result);
+            StructNameTest data = new();
+            data.a = result;
+            return data;
+        }
+
+        public void Write(string content, SheetBinaryWriter writer)
+        {
+            writer.Write((StructNameTest)ToData(content));
         }
     }
     
     [MemoryPackable]
     public partial class StructNameTest : ILwSerializable
     {
-        private int a;
+        public int a;
 
         void ILwSerializable.OnNativeWrite(LwBinaryWriter writer)
         {

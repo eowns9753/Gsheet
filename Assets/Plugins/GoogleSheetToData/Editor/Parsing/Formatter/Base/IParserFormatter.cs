@@ -12,6 +12,7 @@ namespace SheetData.Scripts.Parsing
     
     public interface IParserFormatter
     {
+        public object ToData(string content);
         public void Write(string content, SheetBinaryWriter writer);
     }
 }
