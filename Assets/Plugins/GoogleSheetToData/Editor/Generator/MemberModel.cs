@@ -16,7 +16,13 @@ namespace SheetData.Editor.Generator
         public string Type { get; set; }
         public string Name { get; set; }
         public HeaderType HeaderType { get; set; }
-
+        
+        public MemberModel(string name, string type)
+        {
+            Type = type;
+            Name = name;
+        }
+        
         public MemberModel(HeaderType typeData)
         {
             HeaderType = typeData;

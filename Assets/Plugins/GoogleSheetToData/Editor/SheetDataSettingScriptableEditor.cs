@@ -70,6 +70,9 @@ namespace SheetData.Editor
                     IOUtils.SaveFile(path, Encoding.UTF8.GetBytes(generatorCode));
                 }
             }
+            GSheetModel model = new GSheetModel(sheetDatas.ToArray(), target.GeneratorNameSpace);
+            IOUtils.SaveFile(IOUtils.GetSystemPath($"{target.CodeGeneratorPos}/{GSheetModel.ClassName}.cs"), 
+                Encoding.UTF8.GetBytes(model.Generator()));
             AssetDatabase.Refresh();
         }
         
@@ -90,27 +93,7 @@ namespace SheetData.Editor
             reader.Read(out int sheetCount);
             for (int i = 0; i < sheetCount; i++)
             {
-                reader.Read(out SheetInfo info); 
-                var type = TypeFinder.Find(info.SheetName);
-                Dictionary<string, object> temp = new();
-                List<object> tempList = new();
-                
-                for (int j = 0; j < info.DataCount; j++)
-                {
-                    var instance = (ILwSerializable)Activator.CreateInstance(type);
-                    if (info.IsDictionary)
-                    {
-                        reader.Read(out string key);
-                        instance.OnNativeRead(reader);
-                        temp.Add(key, instance);
-                    }
-                    else
-                    {
-                        instance.OnNativeRead(reader);
-                        tempList.Add(instance);
-                    }
-                }
-                reader.ReadPadding(32);
+                var data = SheetDataHelper.ReadSheet(reader);
             }
             
             reader.Dispose();

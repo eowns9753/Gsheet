@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Reflection;
 using Unity.Collections;
-using UnityEditor.Compilation;
 using UnityEngine;
 using Assembly = System.Reflection.Assembly;
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using LWSerializer;
+using SheetData.Editor.Generator;
 
 namespace SheetData.IO
 {
@@ -14,6 +15,7 @@ namespace SheetData.IO
         public string Gid => _gid;
         public int DataCount => _dataCount;
         public bool IsDictionary => _isDictionary;
+        
         public SheetInfo(string sheetName, string gid)
         {
             _sheetName = sheetName;
@@ -27,6 +29,11 @@ namespace SheetData.IO
             _dataCount = rowCount;
             _isDictionary = isDictionary;
             return this;
+        }
+
+        public Type GetSheetType()
+        {
+            return TypeFinder.Find(_sheetName);
         }
         
         void ILwSerializable.OnNativeWrite(LwBinaryWriter writer)
