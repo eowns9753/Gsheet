@@ -8,8 +8,9 @@ namespace SheetData.Editor.Generator
     public class GSheetModel
     {
         private static readonly Template TEMPLATE = Template.Parse(SheetDataTemplate.Template_Class);
-        public static string ClassName => "GSheet";
+        public const string NAME = "Gsheet";
         public string NamespaceName { get; set; }
+        public string ClassName => NAME;
         public List<MemberModel> Members { get; set; } = new();
         
         public GSheetModel(SheetRawData[] datas, string namespaceName)
@@ -35,13 +36,30 @@ using SheetData.IO;
 
 namespace {{ namespace_name }}
 {
-    public static partial class GSheet
+    public partial class {{ class_name }}
     {
+        private static {{ class_name }} _instance;
         {{~ for prop in members ~}}
-        public static {{ prop.type }} {{ prop.name }};
+        public {{ prop.type }} _{{ prop.name }};
+        {{~ end ~}}
+        {{~ for prop in members ~}}
+        public static {{ prop.type }} => Instance._{{ prop.name }};
         {{~ end ~}}
 
-        public static void Load()
+        public {{ class_name }} Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = new {{ class_name }}();
+                    _instance.Load();
+                }
+                return _instance;
+            }
+        }
+
+        private void Load()
         {
             SheetBinaryReader reader = SheetBinaryReader.Create(SheetDataSettingScriptable.BinaryFileName);
             reader.Read(out int sheetCount);

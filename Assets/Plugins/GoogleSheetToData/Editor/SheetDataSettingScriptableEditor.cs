@@ -71,7 +71,7 @@ namespace SheetData.Editor
                 }
             }
             GSheetModel model = new GSheetModel(sheetDatas.ToArray(), target.GeneratorNameSpace);
-            IOUtils.SaveFile(IOUtils.GetSystemPath($"{target.CodeGeneratorPos}/{GSheetModel.ClassName}.cs"), 
+            IOUtils.SaveFile(IOUtils.GetSystemPath($"{target.CodeGeneratorPos}/{GSheetModel.NAME}.cs"), 
                 Encoding.UTF8.GetBytes(model.Generator()));
             AssetDatabase.Refresh();
         }

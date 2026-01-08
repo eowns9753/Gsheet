@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using LWSerializer;
-using MemoryPack;
 using SheetData.IO;
 using SheetData.Scripts.Parsing;
 
@@ -23,7 +22,6 @@ namespace DefaultNamespace
         }
     }
     
-    [MemoryPackable]
     public partial class StructNameTest : ILwSerializable
     {
         public int a;
