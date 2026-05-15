@@ -35,18 +35,23 @@ namespace SheetData.IO
         public static T ReadSheet<T>(SheetBinaryReader reader)
         {
             var sheetResult = ReadSheet(reader);
-            if (typeof(T) is IList)
+            var targetType = typeof(T);
+            
+            if (typeof(IList).IsAssignableFrom(targetType))
             {
-                return (T)Activator.CreateInstance(typeof(T), sheetResult);
+                IList result = (IList)Activator.CreateInstance<T>();
+                foreach (var itm in (IList)sheetResult)
+                    result.Add(itm);
+                return (T)result;
             }
-            else if (typeof(T) is IDictionary)
+            else if (typeof(IDictionary).IsAssignableFrom(targetType))
             {
                 IDictionary result = (IDictionary)Activator.CreateInstance<T>();
                 foreach (DictionaryEntry key in (IDictionary)sheetResult)
                     result.Add(key.Key, key.Value);
                 return (T)result;
             }
-            else if (typeof(T).IsArray)
+            else if (targetType.IsArray)
             {
                 return (T)sheetResult;
             }

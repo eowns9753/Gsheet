@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace SheetData.Scripts.Parsing
 {
@@ -39,6 +40,15 @@ namespace SheetData.Scripts.Parsing
                 result.Add("");
             }
             return result;
+        }
+
+        public static string RemoveBucket(string str)
+        {
+            if (str.First() == '{')
+                str = str.Remove(0, 1);
+            if(str.Last() == '}')
+                str = str.Remove(str.Length - 1, 1);
+            return str;
         }
     }
 }

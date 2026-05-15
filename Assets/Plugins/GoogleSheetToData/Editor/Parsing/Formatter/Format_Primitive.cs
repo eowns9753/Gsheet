@@ -25,6 +25,8 @@ namespace SheetData.Scripts.Parsing
     {
         public object ToData(string content)
         {
+            if (content == "")
+                return default(T);
             return Convert.ChangeType(content, typeof(T));
         }
         

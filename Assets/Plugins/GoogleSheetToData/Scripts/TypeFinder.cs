@@ -44,15 +44,13 @@ namespace SheetData.Editor.Generator
             
             {"Quaternion", typeof(Quaternion)},
             {"Quaternion[]", typeof(Quaternion[])},
-            {"NativeArray`1", typeof(NativeArray<>)}
+            {"NativeArray`1", typeof(NativeArray<>)},
+            {"Color", typeof(Color)},
         };
         
         private static void RefreshAssemblies()
         {
             _assemblies = new();
-            string asd = "Vector2";
-            string asd3 = "Vector3";
-            
             //Find Unity Type ->  asd 
             
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();

@@ -13,15 +13,27 @@ namespace SheetData.Editor.Generator
         public string ClassName => NAME;
         public List<MemberModel> Members { get; set; } = new();
         
+        public List<string> DictionaryKeys { get; set; }
+
         public GSheetModel(SheetRawData[] datas, string namespaceName)
         {
             this.NamespaceName = namespaceName;
+            HashSet<string> allKeys = new HashSet<string>();
+            DictionaryKeys = new List<string>();
             foreach (var data in datas)
             {
                 Members.Add(new MemberModel(data.SheetName, 
                     data.IsDictionary() ? $"Dictionary<string, {data.SheetName}>" :
                         $"List<{data.SheetName}>"));
+                for (int i = 1; i < data.Rows.Count; i++)
+                    allKeys.Add(data.Rows[i][0]);
             }
+
+
+            foreach (var key in allKeys)
+                if(key.Trim() != string.Empty)
+                    DictionaryKeys.Add(key);
+            //DictionaryKeys
         }
         public string Generator()
         {
@@ -33,6 +45,7 @@ namespace SheetData.Editor.Generator
     {
         public const string Template_Class = @"using System.Collections.Generic;
 using SheetData.IO;
+using SheetData;
 
 namespace {{ namespace_name }}
 {
@@ -43,10 +56,10 @@ namespace {{ namespace_name }}
         public {{ prop.type }} _{{ prop.name }};
         {{~ end ~}}
         {{~ for prop in members ~}}
-        public static {{ prop.type }} => Instance._{{ prop.name }};
+        public static {{ prop.type }} {{ prop.name }} => Instance._{{ prop.name }};
         {{~ end ~}}
 
-        public {{ class_name }} Instance
+        public static {{ class_name }} Instance
         {
             get
             {
@@ -64,10 +77,17 @@ namespace {{ namespace_name }}
             SheetBinaryReader reader = SheetBinaryReader.Create(SheetDataSettingScriptable.BinaryFileName);
             reader.Read(out int sheetCount);
             {{~ for prop in members ~}}
-            {{ prop.name }} = SheetDataHelper.ReadSheet<{{ prop.type }}>(reader);
+            _{{ prop.name }} = SheetDataHelper.ReadSheet<{{ prop.type }}>(reader);
             {{~ end ~}}
             reader.Dispose();
         }
+    }
+
+    public partial class Gsheet
+    {
+        {{~ for prop in dictionary_keys ~}}
+        public const string {{ prop | string.replace '/' '_' | string.upcase }} = ""{{ prop }}"";
+        {{~ end ~}}
     }
 }
 ";

@@ -76,7 +76,6 @@ namespace SheetData.Scripts.Parsing
             {
                 if(formatterType.IsAbstract || formatterType.IsInterface)
                     continue;
-                
                 if (formatterType.IsGenericType)
                 {
                     if(formatterType.GetGenericArguments().Length != 1)
@@ -84,7 +83,6 @@ namespace SheetData.Scripts.Parsing
                     
                     if (!_parserFactories.ContainsKey(formatterType))
                     {
-                        IParserFormatter dummy = null;
                         var trigger = GetTriggerType(formatterType, true);
                         if(trigger != null)
                             _parserFactories.Add(trigger, new GenericParserFactory(formatterType));

@@ -17,7 +17,10 @@ namespace SheetData.Scripts.Parsing
             var elementParser = ParserFormatter.Get(typeof(T));
             T[] newArray = new T[contents.Count];
             for (int i = 0; i < contents.Count; i++)
-                newArray[i] = (T)elementParser.ToData(contents[i]);
+            {
+                var str = StringArray.RemoveBucket(contents[i]);
+                newArray[i] = (T)elementParser.ToData(str);
+            }
             return newArray;
         }
 

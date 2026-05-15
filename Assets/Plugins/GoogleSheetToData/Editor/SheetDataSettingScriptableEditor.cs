@@ -8,6 +8,7 @@ using SheetData.Editor.Generator;
 using SheetData.Editor.Utils;
 using SheetData.IO;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
 
 namespace SheetData.Editor
@@ -121,6 +122,31 @@ namespace SheetData.Editor
             {
                 LoadTest(scriptable);
             }
+        }
+
+        [MenuItem("Tools/Gsheet Info")]
+        public static void ShowSetting()
+        {
+            MyWrapperWindow.CreateWindow<MyWrapperWindow>().Show();
+        }
+
+        public static SheetDataSettingScriptable GetScriptable()
+        {
+            string[] guids = AssetDatabase.FindAssets("t:SheetDataSettingScriptable");
+            var asset = AssetDatabase.LoadAssetAtPath<SheetDataSettingScriptable>(AssetDatabase.GUIDToAssetPath(guids[0]));
+            return asset;
+        }
+    }
+    
+    public class MyWrapperWindow : EditorWindow
+    {
+        public void CreateGUI()
+        {
+            var asset = SheetDataSettingScriptableEditor.GetScriptable();
+        
+            // 래퍼 요소 생성: 이 한 줄로 인스펙터가 통째로 들어옵니다.
+            InspectorElement inspector = new InspectorElement(asset);
+            rootVisualElement.Add(inspector);
         }
     }
 }

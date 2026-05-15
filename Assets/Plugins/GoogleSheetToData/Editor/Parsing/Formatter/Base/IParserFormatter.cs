@@ -3,7 +3,7 @@ using SheetData.IO;
 
 namespace SheetData.Scripts.Parsing
 {
-    [AttributeUsage(AttributeTargets.Class)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
     public class ParserTriggerAttribute : Attribute
     {
         public Type TriggerType { get; }

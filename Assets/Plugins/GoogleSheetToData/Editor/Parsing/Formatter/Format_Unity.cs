@@ -26,8 +26,6 @@ namespace SheetData.Scripts.Parsing
     [ParserTrigger(typeof(Vector3))]
     public class Format_Vector3 : IParserFormatter
     {
-        public Type Type => typeof(Vector3);
-
         public object ToData(string content)
         {
             var span = content.AsSpan().Trim(new char[] { '{', '}', '(', ')' });
@@ -45,11 +43,10 @@ namespace SheetData.Scripts.Parsing
             writer.Write((Vector3)ToData(content));
         }
     }
+    
     [ParserTrigger(typeof(Vector2Int))]
     public class Format_Vector2Int : IParserFormatter
     {
-        public Type Type => typeof(Vector2Int);
-
         public object ToData(string content)
         {
             var span = content.AsSpan().Trim(new char[] { '{', '}', '(', ')' });
@@ -64,11 +61,10 @@ namespace SheetData.Scripts.Parsing
             writer.Write((Vector2Int)ToData(content));    
         }
     }
+    
     [ParserTrigger(typeof(Vector3Int))]
     public class Format_Vector3Int : IParserFormatter
     {
-        public Type Type => typeof(Vector3Int);
-
         public object ToData(string content)
         {
             var span = content.AsSpan().Trim(new char[] { '{', '}', '(', ')' });
@@ -84,6 +80,21 @@ namespace SheetData.Scripts.Parsing
         public void Write(string content, SheetBinaryWriter writer)
         {
             writer.Write((Vector3Int)ToData(content));
+        }
+    }
+
+    [ParserTrigger(typeof(Color))]
+    public class Format_Color : IParserFormatter
+    {
+        public object ToData(string content)
+        {
+            ColorUtility.TryParseHtmlString(content, out var color);
+            return color;
+        }
+
+        public void Write(string content, SheetBinaryWriter writer)
+        {
+            writer.Write((Color)ToData(content));
         }
     }
 }
