@@ -29,6 +29,9 @@ namespace SheetData.Scripts.Parsing
             _primitiveFormat = new GenericParserFactory(typeof(Format_Primitive<>));
         }
         
+        /// <summary>
+        /// 미리 정의된 타입에 해당하는 포매터를 가져와 반환합니다.
+        /// </summary>
         public static IParserFormatter Get(Type type)
         {
             IParserFormatter formatter = null;
@@ -62,6 +65,8 @@ namespace SheetData.Scripts.Parsing
         private static Type GetTriggerType(Type type, bool ignoreError = false)
         {
             var attribute = type.GetCustomAttribute<ParserTriggerAttribute>();
+            if (attribute == null) //Trigger타입 명시 없을경우 본인타입 반환,
+                    return type;
             if(!ignoreError && attribute == null)
                 throw new Exception($"{type.Name} Parser trigger not found, Use Attribute 'ParserTriggerAttribute'");
             return attribute?.TriggerType;

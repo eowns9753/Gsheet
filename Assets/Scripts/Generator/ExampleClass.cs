@@ -1,5 +1,5 @@
 using System;
-using DefaultNamespace;
+using Examples;
 using LWSerializer;
 
 namespace SheetData.Generator
@@ -8,15 +8,15 @@ namespace SheetData.Generator
     {
         private string _localizeName;
         private float _time;
-        private TestEnum _property;
+        private CustomEnum _property;
         private int[] _arr;
-        private TestEnum[] _properties;
+        private CustomEnum[] _properties;
 
         public string localizeName => _localizeName;
         public float time => _time;
-        public TestEnum property => _property;
+        public CustomEnum property => _property;
         public int[] arr => _arr;
-        public TestEnum[] properties => _properties;
+        public CustomEnum[] properties => _properties;
 
         void ILwSerializable.OnNativeWrite(LwBinaryWriter writer)
         {

@@ -5,6 +5,7 @@ namespace SheetData.Scripts.Parsing
 {
     public class StringArray
     {
+        // <summary> 버킷 혹은 쉼표로 구분된 값을 분리해서 반환합니다 </summary>
         public static List<string> Convert(string content)
         {
             List<string> result = new List<string>();

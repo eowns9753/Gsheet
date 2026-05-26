@@ -124,6 +124,27 @@ namespace SheetData.Editor.Generator
             }
             return result.ToArray();
         }
+
+        /// <summary>
+        /// T 에 해당하는 어트리뷰트를 선언한 타입을 반환합니다.
+        /// </summary>
+        /// <returns></returns>
+        public static Type[] GetAssignableFromAttributes<T>()
+        {
+            var baseType = typeof(T);
+            if(_assemblies == null)
+                RefreshAssemblies();
+            List<Type> result = new List<Type>();
+            foreach (var ass in _assemblies)
+            {
+                var export = ass.ExportedTypes;
+                foreach (var type in export)
+                    if (type.GetCustomAttributes(typeof(T), false).Length > 0)
+                        result.Add(type);
+            }
+
+            return result.ToArray();
+        }
         
         
 

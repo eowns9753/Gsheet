@@ -9,9 +9,11 @@ namespace SheetData.Generator
         private static Gsheet _instance;
         public List<ExampleClass> _ExampleClass;
         public Dictionary<string, ExampleSturct> _ExampleSturct;
+        public List<CustomTypes> _CustomTypes;
         public Dictionary<string, Localize> _Localize;
         public static List<ExampleClass> ExampleClass => Instance._ExampleClass;
         public static Dictionary<string, ExampleSturct> ExampleSturct => Instance._ExampleSturct;
+        public static List<CustomTypes> CustomTypes => Instance._CustomTypes;
         public static Dictionary<string, Localize> Localize => Instance._Localize;
 
         public static Gsheet Instance
@@ -33,6 +35,7 @@ namespace SheetData.Generator
             reader.Read(out int sheetCount);
             _ExampleClass = SheetDataHelper.ReadSheet<List<ExampleClass>>(reader);
             _ExampleSturct = SheetDataHelper.ReadSheet<Dictionary<string, ExampleSturct>>(reader);
+            _CustomTypes = SheetDataHelper.ReadSheet<List<CustomTypes>>(reader);
             _Localize = SheetDataHelper.ReadSheet<Dictionary<string, Localize>>(reader);
             reader.Dispose();
         }

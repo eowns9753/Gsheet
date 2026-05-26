@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 using Unity.Collections;
-using DefaultNamespace;
 using LWSerializer;
 
 namespace SheetData.Generator
@@ -12,14 +11,14 @@ namespace SheetData.Generator
         private float _speed;
         private NativeArray<int> _nativeArr;
         private FixedString32Bytes _testfxStr;
-        private StructNameTest _a;
+        private string _a;
         private NativeReference<int> _refInt;
 
         public Vector2 direction => _direction;
         public float speed => _speed;
         public NativeArray<int> nativeArr => _nativeArr;
         public FixedString32Bytes testfxStr => _testfxStr;
-        public StructNameTest a => _a;
+        public string a => _a;
         public NativeReference<int> refInt => _refInt;
 
         void ILwSerializable.OnNativeWrite(LwBinaryWriter writer)
