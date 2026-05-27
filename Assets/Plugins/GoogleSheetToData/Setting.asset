@@ -15,3 +15,10 @@ MonoBehaviour:
   _codeGeneratorPos: Scripts/Generator
   _generatorNameSpace: SheetData.Generator
   _sheetID: 1188AKPfAl2taqn6G-JDENJF-WeO_YA_gE4SRYzMRZBc
+  _localizeSheetName: Localize
+  _localizeLanguageCodes:
+  - EN
+  - KR
+  - JP
+  - CN
+  - TW

@@ -14,9 +14,7 @@ public class LocalizeTMPTextEditor : TMP_EditorPanelUI
     protected override void OnEnable()
     {
         base.OnEnable();
-        // 실제 TextMeshProLocalizeUGUI 클래스에 정의된 필드 이름과 일치해야 합니다.
-        // 만약 private 필드에 [SerializeField]를 사용했다면 "m_LocalizeKey" 형태일 수 있습니다.
-        localizeKeyProp = serializedObject.FindProperty("LocalizeKey");
+        localizeKeyProp = serializedObject.FindProperty("_localizeKey");
     }
 
     public override void OnInspectorGUI()
@@ -28,9 +26,7 @@ public class LocalizeTMPTextEditor : TMP_EditorPanelUI
             LocalizeFoldout = !LocalizeFoldout;
 
         var tmpt = target as TextMeshProLocalizeUGUI;
-
-        // null 체크: SerializedProperty를 사용하면 Unity가 [Serializable] 객체를 자동 생성하지만,
-        // 인스턴스가 런타임에 직접 할당되어야 하는 구조라면 아래 코드를 유지합니다.
+        
         if (tmpt.LocalizeKey == null)
             tmpt.LocalizeKey = new LocalizeString();
 
@@ -43,14 +39,12 @@ public class LocalizeTMPTextEditor : TMP_EditorPanelUI
             }
             else
             {
-                EditorGUILayout.HelpBox("LocalizeKey 프로퍼티를 찾을 수 없습니다. 필드 이름을 확인하세요.", MessageType.Warning);
+                EditorGUILayout.HelpBox("Cannot find the LocalizeKey property. Please check the field name", MessageType.Warning);
             }
         }
 
-        // GUI 변경 사항을 SerializedObject에 반영 (Undo / Prefab Override 정상 작동 보장)
         bool isModified = serializedObject.ApplyModifiedProperties();
-
-        // 매 프레임 text를 할당하는 대신, 프로퍼티가 변경되었을 때만 텍스트를 갱신하고 Dirty 마킹
+        
         if (isModified)
         {
             tmpt.text = tmpt.LocalizeKey.GetString();
