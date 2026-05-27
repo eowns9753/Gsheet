@@ -2,6 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using LWSerializer;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
 namespace SheetData.IO
@@ -22,12 +23,18 @@ namespace SheetData.IO
             SheetBinaryReader result = new(bytes);
             return result;
         }
-        public static SheetBinaryReader Create(string fileName)
+        /// <summary> Resource.Load 를 이용해 바이너리를 불러옵니다 </summary>
+        public static SheetBinaryReader Create(string resourceName)
         {
-            var path = Path.Combine(Application.dataPath, fileName);
-            var bytes = File.ReadAllBytes(path);
-            SheetBinaryReader result = new(bytes);
-            return result;
+            unsafe
+            {
+                var textAsset = Resources.Load<TextAsset>(resourceName);
+                if (textAsset == null)
+                    return null;
+                var bytes =  Resources.Load<TextAsset>(resourceName).GetData<byte>();
+                SheetBinaryReader result = new SheetBinaryReader(new IntPtr(bytes.GetUnsafePtr()));
+                return result;
+            }
         }
     }
 }

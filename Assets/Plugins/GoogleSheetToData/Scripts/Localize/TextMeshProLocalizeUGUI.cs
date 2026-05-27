@@ -1,6 +1,5 @@
 ﻿using Localize.Elements;
 using SheetData.Localize;
-using SheetData.Localize.Elements;
 using TMPro;
 using UnityEngine;
 
@@ -32,7 +31,7 @@ namespace SheetData.SheetData
             {
                 _localizeKey ??= new LocalizeString();
                 _localizeKey.LocalizeKey = value;
-                text = LocalizeManager.Instance.Localize(_localizeKey.LocalizeKey);
+                text = LocalizeManager.Instance.Localize(this, _localizeKey.LocalizeKey);
             }
         }
         
@@ -45,36 +44,27 @@ namespace SheetData.SheetData
         protected override void OnEnable()
         {
             base.OnEnable();
-            if(LocalizeManager.HasUse)
-                LocalizeManager.Instance.AddListener(this);
+            LocalizeManager.Instance.AddListener(this);
         }
 
         protected override void OnDisable()
         {
-            if(LocalizeManager.HasUse)
-                LocalizeManager.Instance.RemoveListener(this);
+            LocalizeManager.Instance.RemoveListener(this);
             base.OnDisable();
         }
 
         public void RefreshLocalize()
         {
             if (LocalizeManager.Instance is { })
-                RefreshLocalize(LocalizeManager.Instance, RefreshMode.All);
+                RefreshLocalize(RefreshMode.All);
         }
         
-        public void RefreshLocalize(LocalizeManager manager, RefreshMode mode)
+        public void RefreshLocalize(RefreshMode mode)
         {
             if (_localizeKey == null)
                 return;
             
-            if (manager == null)
-            {
-                text = _localizeKey.GetString();
-            }
-            else
-            {
-                text = LocalizeManager.Instance.Localize(_localizeKey.LocalizeKey);
-            }
+            text = LocalizeManager.Instance.Localize(this, _localizeKey.LocalizeKey);
         }
     }
 }

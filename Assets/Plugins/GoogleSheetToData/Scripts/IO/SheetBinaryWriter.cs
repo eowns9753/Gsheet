@@ -2,6 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using LWSerializer;
+using UnityEditor;
 using UnityEngine;
 
 namespace SheetData.IO
@@ -39,7 +40,11 @@ namespace SheetData.IO
             {
                 Debug.LogError(ex.ToString());
             }
+
+            var txtasset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>("Assets/"+_fileName);
+            if (txtasset != null)
+                AssetDatabase.SaveAssetIfDirty(txtasset);
         }
-        
+
     }
 }

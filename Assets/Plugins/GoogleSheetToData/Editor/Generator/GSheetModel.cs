@@ -67,6 +67,7 @@ namespace {{ namespace_name }}
                 {
                     _instance = new {{ class_name }}();
                     _instance.Load();
+                    SheetDataSettingScriptable.Instance.GsheetUnLoadFunc = _instance.UnLoad;
                 }
                 return _instance;
             }
@@ -75,11 +76,18 @@ namespace {{ namespace_name }}
         private void Load()
         {
             SheetBinaryReader reader = SheetBinaryReader.Create(SheetDataSettingScriptable.BinaryFileName);
+            if(reader == null)
+                return;
             reader.Read(out int sheetCount);
             {{~ for prop in members ~}}
             _{{ prop.name }} = SheetDataHelper.ReadSheet<{{ prop.type }}>(reader);
             {{~ end ~}}
             reader.Dispose();
+        }
+
+        private void UnLoad()
+        {
+            _instance = null;
         }
     }
 

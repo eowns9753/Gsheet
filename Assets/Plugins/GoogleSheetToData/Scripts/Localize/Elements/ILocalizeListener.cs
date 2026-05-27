@@ -1,6 +1,6 @@
 ﻿using SheetData.Localize;
 
-namespace SheetData.Localize.Elements
+namespace Localize.Elements
 {
     public enum RefreshMode
     {
@@ -10,7 +10,7 @@ namespace SheetData.Localize.Elements
     }
     public interface ILocalizeListener
     {
-        void RefreshLocalize(LocalizeManager manager,RefreshMode mode);
+        void RefreshLocalize(RefreshMode mode);
         
     }
 }

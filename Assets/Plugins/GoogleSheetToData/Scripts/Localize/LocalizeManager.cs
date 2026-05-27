@@ -2,35 +2,32 @@
 using System.Collections.Generic;
 using System.Linq;
 using Localize.Elements;
-using SheetData.Localize.Elements;
+using SheetData.SheetData;
 using TMPro;
 using UnityEngine;
 
 namespace SheetData.Localize
 {
-    public class LocalizeManager : GameObjectSingleton<LocalizeManager>
+    public class LocalizeManager : NativeSingleton<LocalizeManager>
     {
-        public override bool DonDestroyedObject => true;
-        [SerializeField] private List<LocalizeFontSet> _fontSets = new();
         private Dictionary<LangCode, TMP_FontAsset> _fontDic;
         private HashSet<ILocalizeListener> _listeners;
-        private LangCode _lang = LangCode.KR;
+        private LangCode _lang = LangCode.EN;
         public LangCode Language => _lang;
 
-        protected override void OnRegisterInstance()
+        protected override void OnCreateInstance()
         {
-            base.OnRegisterInstance();
-            _fontDic = new Dictionary<LangCode, TMP_FontAsset>();
+            base.OnCreateInstance();
             _listeners = new();
-            foreach (var set in _fontSets)
+            _fontDic = new();
+            foreach (var set in SheetDataSettingScriptable.Instance.LocalizeSetting.FontSets)
                 _fontDic.Add(set.Mode, set.Font);
         }
 
         public void AddListener(ILocalizeListener target)
         {
-            
             _listeners.Add(target);
-            target.RefreshLocalize(this, RefreshMode.All);
+            target.RefreshLocalize(RefreshMode.All);
         }
 
         public void RemoveListener(ILocalizeListener target)
@@ -42,36 +39,33 @@ namespace SheetData.Localize
         {
             bool dirty = _lang != mode;
             _lang = mode;
-            if(dirty)
-                RefreshListener(RefreshMode.Lang);    
+            if (dirty)
+                RefreshListener(RefreshMode.Lang);
         }
 
+        public string Localize(TextMeshProLocalizeUGUI tmpText, string localizeKey)
+        {
+            if (_fontDic.TryGetValue(_lang, out TMP_FontAsset font))
+            {
+                tmpText.font = font;
+            }
+            else
+            {
+                //Debug.LogError("Undefined TMP_FontAsset");
+            }
+           
+            return LocalizeSheetBinder.GetLocalizeString(_lang, localizeKey);
+        }
+        
         public string Localize(string localizeKey)
         {
             return LocalizeSheetBinder.GetLocalizeString(_lang, localizeKey);
         }
-        
-        public TMP_FontAsset GetFontByLanguage(LangCode mode)
-        {
-            if (!_fontDic.TryGetValue(mode, out TMP_FontAsset font))
-            {
-                Debug.LogError("Undefined TMP_FontAsset");
-                return _fontDic.First().Value;
-            }
-            return font;
-        }
-        
+
         public void RefreshListener(RefreshMode mode)
         {
             foreach (var l in _listeners)
-                l.RefreshLocalize(this, mode);
-        }
-        
-        [Serializable]
-        struct LocalizeFontSet
-        {
-            public TMP_FontAsset Font;
-            public LangCode Mode;
+                l.RefreshLocalize(mode);
         }
     }
 }

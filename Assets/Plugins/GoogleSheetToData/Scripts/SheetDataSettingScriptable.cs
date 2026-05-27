@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using Localize.Elements;
 using SheetData.IO;
 using SheetData.Localize;
 using TextMateSharp.Grammars;
@@ -16,26 +18,33 @@ namespace SheetData
     /// </summary>
     public class SheetDataSettingScriptable : ScriptableObject
     {
-        public const string FileName = "Setting.asset";
-        public const string BinaryFileName = "sheetData.bytes";
-        public static SheetDataSettingScriptable Instance = null;
+        public const string FileName = "GsheetSetting";
+        public const string BinaryFileName = "GsheetData";
         
         [SerializeField] private string _codeGeneratorPos = "Scripts/Generator";
         [SerializeField] private string _generatorNameSpace = "SheetData.Generator";
         [SerializeField] private string _sheetID = "1188AKPfAl2taqn6G-JDENJF-WeO_YA_gE4SRYzMRZBc";
         [SerializeField] private LocalizeSetting _localizeSetting;
         [Space(20), SerializeField] private List<SheetInfo> _sheetInfos = new List<SheetInfo>();
-        
+      
+        private static SheetDataSettingScriptable _instance = null;
         public string SheetID => _sheetID;
         public string GeneratorNameSpace => _generatorNameSpace;
         public string CodeGeneratorPos => _codeGeneratorPos;
         public List<SheetInfo> SheetInfos => _sheetInfos;
         public LocalizeSetting LocalizeSetting => _localizeSetting;
-      
-        private void Awake()
+        public Action GsheetUnLoadFunc { get; set; }
+
+        public static SheetDataSettingScriptable Instance
         {
-            Debug.Log("Awake");
-            Instance = this;
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = Resources.Load<SheetDataSettingScriptable>(FileName);
+                }
+                return _instance;
+            }
         }
 
         public virtual void OnBeginGenerator()
@@ -45,9 +54,15 @@ namespace SheetData
 
         public virtual void OnEndGenerator()
         {
-            
+            _ = SlowRefresh();
+        }
 
-
+        async Task SlowRefresh()
+        {
+            await Task.Delay(2500);
+            LocalizeSheetBinder.Initialize();
+            GsheetUnLoadFunc?.Invoke();
+            LocalizeManager.Instance.RefreshListener(RefreshMode.All);
         }
     }
 }

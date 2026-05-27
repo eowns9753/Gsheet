@@ -24,16 +24,7 @@ namespace SheetData.Editor
         {
             if (SheetDataSettingScriptable.Instance == null)
             {
-                string scriptPath = AssetDatabase.GetAssetPath(MonoScript.FromScriptableObject(CreateInstance(typeof(SheetDataSettingScriptable))));
-                var originalDir = IOUtils.GetDirectory(scriptPath);
-                var dir = Path.GetDirectoryName(originalDir) + "/";
-                var finded = IOUtils.GetAssetsForFolder<SheetDataSettingScriptable>(dir);
-                if (finded.Count == 0)
-                {
-                    var scriptablePath = dir + SheetDataSettingScriptable.FileName;
-                    if (AssetDatabase.LoadAssetAtPath<ScriptableObject>(scriptablePath) == null)
-                        ScriptableCreator.Create<SheetDataSettingScriptable>(scriptablePath);
-                }
+                ScriptableCreator.Create<SheetDataSettingScriptable>($"Assets/Resources/{SheetDataSettingScriptable.FileName}.asset");
             }
         }
 
@@ -55,7 +46,7 @@ namespace SheetData.Editor
             }
 
             Dictionary<string, TypeModel> modelMap = new Dictionary<string, TypeModel>();
-            SheetBinaryWriter writer = SheetBinaryWriter.Create(SheetDataSettingScriptable.BinaryFileName);
+            SheetBinaryWriter writer = SheetBinaryWriter.Create($"Resources/{SheetDataSettingScriptable.BinaryFileName}.bytes");
             writer.Write(sheetDatas.Count);
             foreach (var sheetData in sheetDatas)
             {
@@ -140,7 +131,7 @@ namespace SheetData.Editor
             if (scriptable == null)
                 return;
             GUILayout.Space(20);
-            GUILayout.Label(EditorPrefs.GetString(LOG_KEY, "Empty Log"));
+            GUILayout.Label("- LastUpdateInfo \n" + EditorPrefs.GetString(LOG_KEY, "Empty Log"));
             GUILayout.Space(20);
             
             GUILayout.BeginHorizontal();

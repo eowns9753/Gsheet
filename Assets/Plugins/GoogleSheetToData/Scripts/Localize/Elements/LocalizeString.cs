@@ -34,14 +34,7 @@ namespace Localize.Elements
         #region static
         public static string Trans_str(string key)
         {
-            if (LocalizeManager.HasUse)
-            {
-                return LocalizeManager.Instance.Localize(key);
-            }
-            else
-            {
-                return LocalizeSheetBinder.GetLocalizeString(key);
-            }
+            return LocalizeManager.Instance.Localize(key);
         }
         public static LocalizeString Trans_ref(string key)
         {

@@ -24,6 +24,7 @@ namespace SheetData.Generator
                 {
                     _instance = new Gsheet();
                     _instance.Load();
+                    SheetDataSettingScriptable.Instance.GsheetUnLoadFunc = _instance.UnLoad;
                 }
                 return _instance;
             }
@@ -32,12 +33,19 @@ namespace SheetData.Generator
         private void Load()
         {
             SheetBinaryReader reader = SheetBinaryReader.Create(SheetDataSettingScriptable.BinaryFileName);
+            if(reader == null)
+                return;
             reader.Read(out int sheetCount);
             _ExampleClass = SheetDataHelper.ReadSheet<List<ExampleClass>>(reader);
             _ExampleSturct = SheetDataHelper.ReadSheet<Dictionary<string, ExampleSturct>>(reader);
             _CustomTypes = SheetDataHelper.ReadSheet<List<CustomTypes>>(reader);
             _Localize = SheetDataHelper.ReadSheet<Dictionary<string, Localize>>(reader);
             reader.Dispose();
+        }
+
+        private void UnLoad()
+        {
+            _instance = null;
         }
     }
 

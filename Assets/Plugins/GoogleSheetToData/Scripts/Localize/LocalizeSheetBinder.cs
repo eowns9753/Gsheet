@@ -17,6 +17,11 @@ namespace SheetData.Localize
         private static object _gsheetInstance;
         private static PropertyInfo _gsheetLocalizeDictionaryField;
 
+        public static void Initialize()
+        {
+            _gsheetInstance = null;
+        }
+        
         private static bool CheckAndInitialize()
         {
             if (_gsheetInstance == null)
@@ -51,7 +56,7 @@ namespace SheetData.Localize
             if (CheckAndInitialize())
             {
                 var dic = (System.Collections.IDictionary)_gsheetLocalizeDictionaryField.GetValue(_gsheetInstance);
-                if (dic.Contains(key))
+                if (dic!=null && dic.Contains(key))
                     result = (string)_langPropertyAccessor[lang].GetValue(dic[key]);
             }
             return result;
