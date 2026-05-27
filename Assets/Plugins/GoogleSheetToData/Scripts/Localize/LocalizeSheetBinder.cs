@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Localize.Elements;
-using Unity.VisualScripting.FullSerializer.Internal;
 
 namespace SheetData.Localize
 {
@@ -24,7 +23,7 @@ namespace SheetData.Localize
             {
                 _langPropertyAccessor = new();
                 var gsheetData = SheetDataSettingScriptable.Instance;
-                if (string.IsNullOrEmpty(gsheetData.LocalizeSheetName))
+                if (string.IsNullOrEmpty(gsheetData.LocalizeSetting.SheetName))
                 {
                     _gsheetInstance = null;
                 }
@@ -32,9 +31,9 @@ namespace SheetData.Localize
                 {
                     var gsheetType = Type.GetType($"{gsheetData.GeneratorNameSpace}.Gsheet, {GeneratorAssemblyName}");
                     _gsheetInstance = gsheetType.GetProperty("Instance").GetValue(null);
-                    _gsheetLocalizeDictionaryField = gsheetType.GetProperty(gsheetData.LocalizeSheetName);
-                    var localizeType = Type.GetType($"{gsheetData.GeneratorNameSpace}.{gsheetData.LocalizeSheetName}, {GeneratorAssemblyName}");
-                    var allProperties = localizeType.GetDeclaredProperties();
+                    _gsheetLocalizeDictionaryField = gsheetType.GetProperty(gsheetData.LocalizeSetting.SheetName);
+                    var localizeType = Type.GetType($"{gsheetData.GeneratorNameSpace}.{gsheetData.LocalizeSetting.SheetName}, {GeneratorAssemblyName}");
+                    var allProperties = localizeType.GetProperties();
                     EnumCache<LangCode> langCodeCache = new EnumCache<LangCode>();
                     foreach (var property in allProperties)
                     {

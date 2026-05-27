@@ -61,9 +61,9 @@ namespace SheetData.Editor
             {
                 modelMap.Add(sheetData.SheetName, sheetData.ClassGenerator(target.GeneratorNameSpace));
                 sheetData.WriteDirect(writer, modelMap[sheetData.SheetName]);
-                if (sheetData.SheetName == target.LocalizeSheetName)
+                if (sheetData.SheetName == target.LocalizeSetting.SheetName)
                 {
-                    target.LocalizeLanguageCodes = sheetData.Headers.Skip(1).Select(o => o.memberName).ToArray();
+                    target.LocalizeSetting.LanguageCodes = sheetData.Headers.Skip(1).Select(o => o.memberName).ToArray();
                     CreateLocalizeEnums(target);
                 }
             }
@@ -104,10 +104,10 @@ namespace SheetData.Editor
         /// <summary> 지정된 Localize Sheet를 참조해 번역대상 언어코드를 생성합니다. </summary>
         private void CreateLocalizeEnums(SheetDataSettingScriptable target)
         {
-            if(string.IsNullOrEmpty(target.LocalizeSheetName))
+            if(string.IsNullOrEmpty(target.LocalizeSetting.SheetName))
                 return;
             var langs = Enum.GetNames(typeof(LangCode)).ToHashSet();
-            foreach (var code in target.LocalizeLanguageCodes)
+            foreach (var code in target.LocalizeSetting.LanguageCodes)
                 if (langs.Contains(code))
                     langs.Remove(code);
                 else 
@@ -127,7 +127,7 @@ namespace SheetData.Editor
                     Debug.LogWarning("LangCode.cs 파일을 찾을 수 없어 기본 경로에 생성합니다.");
                 }
                 EnumCreator creator = new EnumCreator("LangCode", targetDirectory, "SheetData");
-                foreach (var code in target.LocalizeLanguageCodes)
+                foreach (var code in target.LocalizeSetting.LanguageCodes)
                     creator.AddEnum(code);
                 creator.Generator();
             }
@@ -140,7 +140,6 @@ namespace SheetData.Editor
             if (scriptable == null)
                 return;
             GUILayout.Space(20);
-            DrawLocalizeInspector(scriptable);
             GUILayout.Label(EditorPrefs.GetString(LOG_KEY, "Empty Log"));
             GUILayout.Space(20);
             
@@ -158,10 +157,7 @@ namespace SheetData.Editor
             GUILayout.EndHorizontal();
         }
 
-        private void DrawLocalizeInspector(SheetDataSettingScriptable scriptable = null)
-        {
-            GUILayout.Label($"{scriptable.LocalizeSheetName} Sheet {scriptable.LocalizeLanguageCodes.Length} translations in use");
-        }
+     
         
         [MenuItem("Tools/Gsheet Info")]
         public static void ShowSetting()
