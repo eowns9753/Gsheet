@@ -22,9 +22,10 @@ namespace SheetData
         [SerializeField] private string _codeGeneratorPos = "Scripts/Generator";
         [SerializeField] private string _generatorNameSpace = "SheetData.Generator";
         [SerializeField] private string _sheetID = "1188AKPfAl2taqn6G-JDENJF-WeO_YA_gE4SRYzMRZBc";
-        [SerializeField] private string _localizeSheetName = "Localize";
-        [SerializeField, HideInInspector] private string[] _localizeLanguageCodes = new string[0];
         
+        [SerializeField] private string _localizeSheetName = "Localize";
+        
+        [SerializeField, HideInInspector] private string[] _localizeLanguageCodes = new string[0];
         [Space(20), SerializeField] private List<SheetInfo> _sheetInfos = new List<SheetInfo>();
         
         public string SheetID => _sheetID;

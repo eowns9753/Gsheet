@@ -18,6 +18,7 @@ namespace SheetData.Editor
     [CanEditMultipleObjects]
     public class SheetDataSettingScriptableEditor : UnityEditor.Editor
     {
+        private const string LOG_KEY = "GSHEETLOGKEY";
         [UnityEditor.Callbacks.DidReloadScripts]
         private static void OnScriptsReloaded()
         {
@@ -66,7 +67,9 @@ namespace SheetData.Editor
                     CreateLocalizeEnums(target);
                 }
             }
-            Debug.Log($"size {writer.Length}");
+
+            int writerSize = writer.Length;
+            Debug.Log($"size {writerSize}");
             writer.Save();
             writer.Dispose();
             
@@ -82,6 +85,7 @@ namespace SheetData.Editor
             GSheetModel model = new GSheetModel(sheetDatas.ToArray(), target.GeneratorNameSpace);
             IOUtils.SaveFile(IOUtils.GetSystemPath($"{target.CodeGeneratorPos}/{GSheetModel.NAME}.cs"), 
                 Encoding.UTF8.GetBytes(model.Generator()));
+            EditorPrefs.SetString(LOG_KEY, $"BinarySize - {writerSize:N0} bytes, Updated - {DateTime.Now.ToString()}");
             AssetDatabase.Refresh();
         }
         
@@ -135,8 +139,9 @@ namespace SheetData.Editor
             SheetDataSettingScriptable scriptable = (SheetDataSettingScriptable)target;
             if (scriptable == null)
                 return;
-
+            GUILayout.Space(20);
             DrawLocalizeInspector(scriptable);
+            GUILayout.Label(EditorPrefs.GetString(LOG_KEY, "Empty Log"));
             GUILayout.Space(20);
             
             GUILayout.BeginHorizontal();
@@ -144,7 +149,7 @@ namespace SheetData.Editor
             {
                 Application.OpenURL($"https://docs.google.com/spreadsheets/d/{scriptable.SheetID}/edit");
             }
-            if (GUILayout.Button("GenerateData"))
+            if (GUILayout.Button("Generator"))
             {
                 scriptable.OnBeginGenerator();
                 GenerateData(scriptable);
@@ -155,7 +160,7 @@ namespace SheetData.Editor
 
         private void DrawLocalizeInspector(SheetDataSettingScriptable scriptable = null)
         {
-            GUILayout.Label($"{scriptable.LocalizeSheetName} 시트의 {scriptable.LocalizeLanguageCodes.Length} 개의 번역 사용중");
+            GUILayout.Label($"{scriptable.LocalizeSheetName} Sheet {scriptable.LocalizeLanguageCodes.Length} translations in use");
         }
         
         [MenuItem("Tools/Gsheet Info")]
