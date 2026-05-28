@@ -1,3 +1,5 @@
+(한국어/영어/일본어) / (지원사양 추가)
+
 # GoogleSheetToData
 
 GoogleSheetToData는 Google Sheets에 작성한 기획 데이터를 Unity에서 바로 사용할 수 있는 C# 타입과 바이너리 데이터로 변환하는 플러그인입니다.
