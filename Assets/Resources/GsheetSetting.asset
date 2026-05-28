@@ -23,9 +23,9 @@ MonoBehaviour:
     - CN
     - TW
     _fontSets:
-    - Font: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+    - Font: {fileID: 11400000, guid: 4295b43b26b35c84a830f8ee2c800c09, type: 2}
       Mode: 0
-    - Font: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+    - Font: {fileID: 11400000, guid: 4295b43b26b35c84a830f8ee2c800c09, type: 2}
       Mode: 1
     - Font: {fileID: 11400000, guid: d2a477935c56baa44b31818ad7dd4caf, type: 2}
       Mode: 2
