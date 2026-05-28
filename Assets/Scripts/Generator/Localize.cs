@@ -1,15 +1,17 @@
 using System;
 using LWSerializer;
+using UnityEngine;
 
 namespace Generator
 {
+    [System.Serializable]
     public partial class Localize : ILwSerializable, IDisposable
     {
-        private string _EN;
-        private string _KR;
-        private string _JP;
-        private string _CN;
-        private string _TW;
+        [SerializeField] private string _EN;
+        [SerializeField] private string _KR;
+        [SerializeField] private string _JP;
+        [SerializeField] private string _CN;
+        [SerializeField] private string _TW;
 
         public string EN => _EN;
         public string KR => _KR;

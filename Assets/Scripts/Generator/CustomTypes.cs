@@ -5,13 +5,14 @@ using LWSerializer;
 
 namespace Generator
 {
+    [System.Serializable]
     public partial class CustomTypes : ILwSerializable, IDisposable
     {
-        private Color _color;
-        private float _time;
-        private CustomStruct _c_struct;
-        private CustomClass _c_class;
-        private SpecialClass _cs_class;
+        [SerializeField] private Color _color;
+        [SerializeField] private float _time;
+        [SerializeField] private CustomStruct _c_struct;
+        [SerializeField] private CustomClass _c_class;
+        [SerializeField] private SpecialClass _cs_class;
 
         public Color color => _color;
         public float time => _time;

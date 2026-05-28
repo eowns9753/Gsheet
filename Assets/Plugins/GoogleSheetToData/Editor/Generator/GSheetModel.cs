@@ -44,13 +44,15 @@ namespace SheetData.Editor.Generator
     public class SheetDataTemplate
     {
         public const string Template_Class = @"using System;
+using UnityEngine;
 using System.Collections.Generic;
+using LWSerializer;
 using SheetData.IO;
 using SheetData;
 
 namespace {{ namespace_name }}
 {
-    public partial class {{ class_name }}
+    public partial class {{ class_name }} : ILwSerializable
     {
         private static {{ class_name }} _instance;
         {{~ for prop in members ~}}
@@ -68,18 +70,24 @@ namespace {{ namespace_name }}
                 {
                     _instance = new {{ class_name }}();
                     _instance.Load();
+                    _instance.Initialize();
                     SheetDataSettingScriptable.Instance.GsheetReLoadFunc = _instance.Load;
                 }
                 return _instance;
             }
         }
 
+        private void Initialize()
+        {
+#if UNITY_EDITOR
+            UnityEditor.AssemblyReloadEvents.beforeAssemblyReload += Dispose;
+#endif
+        }
+
         private void Load()
         {
             //Dispose
-            {{~ for prop in members ~}}
-            DisposeMember(_{{ prop.name }});
-            {{~ end ~}}
+            Dispose();
 
             //Read Gsheet Binary
             SheetBinaryReader reader = SheetBinaryReader.Create(SheetDataSettingScriptable.BinaryFileName);
@@ -92,6 +100,27 @@ namespace {{ namespace_name }}
             _{{ prop.name }} = SheetDataHelper.ReadSheet<{{ prop.type }}>(reader);
             {{~ end ~}}
             reader.Dispose();
+        }
+
+        public void OnNativeWrite(LwBinaryWriter writer)
+        {
+            {{~ for prop in members ~}}
+            writer.Write(_{{ prop.name }});
+            {{~ end ~}}
+        }
+
+        public void OnNativeRead(LwBinaryReader reader)
+        {
+            {{~ for prop in members ~}}
+            reader.Read(out _{{ prop.name }});
+            {{~ end ~}}
+        }
+        
+        private void Dispose()
+        {
+            {{~ for prop in members ~}}
+            DisposeMember(_{{ prop.name }});
+            {{~ end ~}}
         }
 
         private void DisposeMember<K, V>(Dictionary<K, V> dic) where V : IDisposable

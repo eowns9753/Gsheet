@@ -18,6 +18,7 @@ namespace SheetData
     /// </summary>
     public class SheetDataSettingScriptable : ScriptableObject
     {
+        public const string GeneratorAssemblyName = "Assembly-CSharp";
         public const string FileName = "GsheetSetting";
         public const string BinaryFileName = "GsheetData";
         
@@ -33,6 +34,8 @@ namespace SheetData
         public List<SheetInfo> SheetInfos => _sheetInfos;
         public LocalizeSetting LocalizeSetting => _localizeSetting;
         public Action GsheetReLoadFunc { get; set; }
+        public Type GSheetType => Type.GetType($"{GeneratorNameSpace}.Gsheet, {GeneratorAssemblyName}");
+        
 
         public static SheetDataSettingScriptable Instance
         {
@@ -46,6 +49,14 @@ namespace SheetData
             }
         }
 
+        
+        public object FindGSheetInstance()
+        {
+            if (GSheetType == null)
+                return null;
+            return GSheetType.GetProperty("Instance")?.GetValue(null);
+        }
+        
         public virtual void OnBeginGenerator()
         {
             

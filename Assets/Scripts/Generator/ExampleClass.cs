@@ -1,16 +1,18 @@
 using System;
 using Examples;
 using LWSerializer;
+using UnityEngine;
 
 namespace Generator
 {
+    [System.Serializable]
     public partial class ExampleClass : ILwSerializable, IDisposable
     {
-        private string _localizeName;
-        private float _time;
-        private CustomEnum _property;
-        private int[] _arr;
-        private CustomEnum[] _properties;
+        [SerializeField] private string _localizeName;
+        [SerializeField] private float _time;
+        [SerializeField] private CustomEnum _property;
+        [SerializeField] private int[] _arr;
+        [SerializeField] private CustomEnum[] _properties;
 
         public string localizeName => _localizeName;
         public float time => _time;

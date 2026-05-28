@@ -11,8 +11,6 @@ namespace SheetData.Localize
     /// </summary>
     public static class LocalizeSheetBinder
     {
-        private const string GeneratorAssemblyName = "Assembly-CSharp";
-        
         private static Dictionary<LangCode, PropertyInfo> _langPropertyAccessor;
         private static object _gsheetInstance;
         private static PropertyInfo _gsheetLocalizeDictionaryField;
@@ -34,12 +32,11 @@ namespace SheetData.Localize
                 }
                 else
                 {
-                    var gsheetType = Type.GetType($"{gsheetData.GeneratorNameSpace}.Gsheet, {GeneratorAssemblyName}");
-                    if (gsheetType == null)
+                    _gsheetInstance = gsheetData.FindGSheetInstance();
+                    if (_gsheetInstance == null)
                         return false;
-                    _gsheetInstance = gsheetType.GetProperty("Instance").GetValue(null);
-                    _gsheetLocalizeDictionaryField = gsheetType.GetProperty(gsheetData.LocalizeSetting.SheetName);
-                    var localizeType = Type.GetType($"{gsheetData.GeneratorNameSpace}.{gsheetData.LocalizeSetting.SheetName}, {GeneratorAssemblyName}");
+                    _gsheetLocalizeDictionaryField = gsheetData.GSheetType.GetProperty(gsheetData.LocalizeSetting.SheetName);
+                    var localizeType = Type.GetType($"{gsheetData.GeneratorNameSpace}.{gsheetData.LocalizeSetting.SheetName}, {SheetDataSettingScriptable.GeneratorAssemblyName}");
                     var allProperties = localizeType.GetProperties();
                     EnumCache<LangCode> langCodeCache = new EnumCache<LangCode>();
                     foreach (var property in allProperties)

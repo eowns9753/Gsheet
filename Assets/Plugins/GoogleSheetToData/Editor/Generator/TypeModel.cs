@@ -5,6 +5,7 @@ using LWSerializer;
 using Scriban;
 using SheetData.Editor.DownLoader;
 using SheetData.IO;
+using UnityEngine;
 
 namespace SheetData.Editor.Generator
 {
@@ -35,6 +36,7 @@ namespace SheetData.Editor.Generator
             }
 
             namespaceChain.Add(typeof(LwBinaryReader).Namespace);
+            namespaceChain.Add(typeof(SerializeField).Namespace);
             namespaceChain.Remove(null);
             NamespaceName = nameSpace;
             TypeKeyword = data.TypeKeyword;
@@ -65,10 +67,11 @@ using {{ us }};
 
 namespace {{ namespace_name }}
 {
+    [System.Serializable]
     public partial {{ type_keyword }} {{ type_name }} : ILwSerializable, IDisposable
     {
         {{~ for prop in members ~}}
-        private {{ prop.type }} _{{ prop.name }};
+        [SerializeField] private {{ prop.type }} _{{ prop.name }};
         {{~ end ~}}
 
         {{~ for prop in members ~}}

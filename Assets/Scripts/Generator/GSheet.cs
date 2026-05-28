@@ -1,11 +1,13 @@
 using System;
+using UnityEngine;
 using System.Collections.Generic;
+using LWSerializer;
 using SheetData.IO;
 using SheetData;
 
 namespace Generator
 {
-    public partial class Gsheet
+    public partial class Gsheet : ILwSerializable
     {
         private static Gsheet _instance;
         public List<ExampleClass> _ExampleClass;
@@ -25,19 +27,24 @@ namespace Generator
                 {
                     _instance = new Gsheet();
                     _instance.Load();
+                    _instance.Initialize();
                     SheetDataSettingScriptable.Instance.GsheetReLoadFunc = _instance.Load;
                 }
                 return _instance;
             }
         }
 
+        private void Initialize()
+        {
+#if UNITY_EDITOR
+            UnityEditor.AssemblyReloadEvents.beforeAssemblyReload += Dispose;
+#endif
+        }
+
         private void Load()
         {
             //Dispose
-            DisposeMember(_ExampleClass);
-            DisposeMember(_ExampleStruct);
-            DisposeMember(_CustomTypes);
-            DisposeMember(_Localize);
+            Dispose();
 
             //Read Gsheet Binary
             SheetBinaryReader reader = SheetBinaryReader.Create(SheetDataSettingScriptable.BinaryFileName);
@@ -51,6 +58,30 @@ namespace Generator
             _CustomTypes = SheetDataHelper.ReadSheet<List<CustomTypes>>(reader);
             _Localize = SheetDataHelper.ReadSheet<Dictionary<string, Localize>>(reader);
             reader.Dispose();
+        }
+
+        public void OnNativeWrite(LwBinaryWriter writer)
+        {
+            writer.Write(_ExampleClass);
+            writer.Write(_ExampleStruct);
+            writer.Write(_CustomTypes);
+            writer.Write(_Localize);
+        }
+
+        public void OnNativeRead(LwBinaryReader reader)
+        {
+            reader.Read(out _ExampleClass);
+            reader.Read(out _ExampleStruct);
+            reader.Read(out _CustomTypes);
+            reader.Read(out _Localize);
+        }
+        
+        private void Dispose()
+        {
+            DisposeMember(_ExampleClass);
+            DisposeMember(_ExampleStruct);
+            DisposeMember(_CustomTypes);
+            DisposeMember(_Localize);
         }
 
         private void DisposeMember<K, V>(Dictionary<K, V> dic) where V : IDisposable
@@ -77,7 +108,6 @@ namespace Generator
         public const string UNIT_104 = "unit_104";
         public const string UNIT_300 = "unit_300";
         public const string UNIT_301 = "unit_301";
-        public const string UNIT_302 = "unit_302";
         public const string UI_OK = "ui_ok";
         public const string UI_CANCEL = "ui_cancel";
         public const string UI_YES = "ui_yes";
@@ -89,5 +119,6 @@ namespace Generator
         public const string CLASS_4 = "class_4";
         public const string CLASS_5 = "class_5";
         public const string CLASS_6 = "class_6";
+        public const string CLASS_7 = "class_7";
     }
 }

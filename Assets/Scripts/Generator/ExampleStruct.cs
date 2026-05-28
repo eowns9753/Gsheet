@@ -5,14 +5,15 @@ using LWSerializer;
 
 namespace Generator
 {
+    [System.Serializable]
     public partial struct ExampleStruct : ILwSerializable, IDisposable
     {
-        private Vector2 _direction;
-        private float _speed;
-        private NativeArray<int> _nativeArr;
-        private FixedString32Bytes _testfxStr;
-        private string _a;
-        private NativeReference<int> _refInt;
+        [SerializeField] private Vector2 _direction;
+        [SerializeField] private float _speed;
+        [SerializeField] private NativeArray<int> _nativeArr;
+        [SerializeField] private FixedString32Bytes _testfxStr;
+        [SerializeField] private string _a;
+        [SerializeField] private NativeReference<int> _refInt;
 
         public Vector2 direction => _direction;
         public float speed => _speed;
