@@ -1,0 +1,18 @@
+{
+  "name": "com.hoguma.gsheet",
+  "version": "1.0.0",
+  "displayName": "Gsheet",
+  "description": "",
+  "unity": "2021.3",
+  "unityRelease": "0f1",
+  "author": {
+    "name": "hoguma",
+    "url": "https://github.com/eowns9753/Gsheet"
+  },
+  "keywords": [
+    "utility",
+    "tools",
+    "googleSheet",
+    "Generator"
+  ]
+}
