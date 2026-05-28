@@ -31,7 +31,7 @@ namespace SheetData.IO
                 var textAsset = Resources.Load<TextAsset>(resourceName);
                 if (textAsset == null)
                     return null;
-                var bytes =  Resources.Load<TextAsset>(resourceName).GetData<byte>();
+                var bytes =  textAsset.GetData<byte>();
                 SheetBinaryReader result = new SheetBinaryReader(new IntPtr(bytes.GetUnsafePtr()));
                 return result;
             }

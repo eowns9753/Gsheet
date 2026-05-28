@@ -43,7 +43,8 @@ namespace SheetData.Editor.Generator
     
     public class SheetDataTemplate
     {
-        public const string Template_Class = @"using System.Collections.Generic;
+        public const string Template_Class = @"using System;
+using System.Collections.Generic;
 using SheetData.IO;
 using SheetData;
 
@@ -67,7 +68,7 @@ namespace {{ namespace_name }}
                 {
                     _instance = new {{ class_name }}();
                     _instance.Load();
-                    SheetDataSettingScriptable.Instance.GsheetUnLoadFunc = _instance.UnLoad;
+                    SheetDataSettingScriptable.Instance.GsheetReLoadFunc = _instance.Load;
                 }
                 return _instance;
             }
@@ -75,9 +76,17 @@ namespace {{ namespace_name }}
 
         private void Load()
         {
+            //Dispose
+            {{~ for prop in members ~}}
+            DisposeMember(_{{ prop.name }});
+            {{~ end ~}}
+
+            //Read Gsheet Binary
             SheetBinaryReader reader = SheetBinaryReader.Create(SheetDataSettingScriptable.BinaryFileName);
             if(reader == null)
                 return;
+            
+            //Read Data
             reader.Read(out int sheetCount);
             {{~ for prop in members ~}}
             _{{ prop.name }} = SheetDataHelper.ReadSheet<{{ prop.type }}>(reader);
@@ -85,9 +94,18 @@ namespace {{ namespace_name }}
             reader.Dispose();
         }
 
-        private void UnLoad()
+        private void DisposeMember<K, V>(Dictionary<K, V> dic) where V : IDisposable
         {
-            _instance = null;
+            if(dic == null) return;
+            foreach (var v in dic)
+                v.Value.Dispose();
+        }
+
+        private void DisposeMember<V>(List<V> list) where V : IDisposable
+        {
+            if(list == null) return;
+            foreach (var v in list)
+                v.Dispose();
         }
     }
 

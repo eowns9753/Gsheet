@@ -166,7 +166,6 @@ namespace SheetData.Editor.Generator
                 if (!IsUnmanaged(field.FieldType))
                     return false;
             }
-
             return true;
         }
     }

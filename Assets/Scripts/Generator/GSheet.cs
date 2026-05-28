@@ -1,18 +1,19 @@
+using System;
 using System.Collections.Generic;
 using SheetData.IO;
 using SheetData;
 
-namespace SheetData.Generator
+namespace Generator
 {
     public partial class Gsheet
     {
         private static Gsheet _instance;
         public List<ExampleClass> _ExampleClass;
-        public Dictionary<string, ExampleSturct> _ExampleSturct;
+        public Dictionary<string, ExampleStruct> _ExampleStruct;
         public List<CustomTypes> _CustomTypes;
         public Dictionary<string, Localize> _Localize;
         public static List<ExampleClass> ExampleClass => Instance._ExampleClass;
-        public static Dictionary<string, ExampleSturct> ExampleSturct => Instance._ExampleSturct;
+        public static Dictionary<string, ExampleStruct> ExampleStruct => Instance._ExampleStruct;
         public static List<CustomTypes> CustomTypes => Instance._CustomTypes;
         public static Dictionary<string, Localize> Localize => Instance._Localize;
 
@@ -24,7 +25,7 @@ namespace SheetData.Generator
                 {
                     _instance = new Gsheet();
                     _instance.Load();
-                    SheetDataSettingScriptable.Instance.GsheetUnLoadFunc = _instance.UnLoad;
+                    SheetDataSettingScriptable.Instance.GsheetReLoadFunc = _instance.Load;
                 }
                 return _instance;
             }
@@ -32,20 +33,38 @@ namespace SheetData.Generator
 
         private void Load()
         {
+            //Dispose
+            DisposeMember(_ExampleClass);
+            DisposeMember(_ExampleStruct);
+            DisposeMember(_CustomTypes);
+            DisposeMember(_Localize);
+
+            //Read Gsheet Binary
             SheetBinaryReader reader = SheetBinaryReader.Create(SheetDataSettingScriptable.BinaryFileName);
             if(reader == null)
                 return;
+            
+            //Read Data
             reader.Read(out int sheetCount);
             _ExampleClass = SheetDataHelper.ReadSheet<List<ExampleClass>>(reader);
-            _ExampleSturct = SheetDataHelper.ReadSheet<Dictionary<string, ExampleSturct>>(reader);
+            _ExampleStruct = SheetDataHelper.ReadSheet<Dictionary<string, ExampleStruct>>(reader);
             _CustomTypes = SheetDataHelper.ReadSheet<List<CustomTypes>>(reader);
             _Localize = SheetDataHelper.ReadSheet<Dictionary<string, Localize>>(reader);
             reader.Dispose();
         }
 
-        private void UnLoad()
+        private void DisposeMember<K, V>(Dictionary<K, V> dic) where V : IDisposable
         {
-            _instance = null;
+            if(dic == null) return;
+            foreach (var v in dic)
+                v.Value.Dispose();
+        }
+
+        private void DisposeMember<V>(List<V> list) where V : IDisposable
+        {
+            if(list == null) return;
+            foreach (var v in list)
+                v.Dispose();
         }
     }
 

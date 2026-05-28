@@ -40,10 +40,7 @@ namespace SheetData.IO
             {
                 Debug.LogError(ex.ToString());
             }
-
-            var txtasset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>("Assets/"+_fileName);
-            if (txtasset != null)
-                AssetDatabase.SaveAssetIfDirty(txtasset);
+            AssetDatabase.ImportAsset("Assets/"+_fileName, ImportAssetOptions.ForceSynchronousImport);
         }
 
     }

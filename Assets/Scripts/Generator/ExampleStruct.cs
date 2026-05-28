@@ -5,7 +5,7 @@ using LWSerializer;
 
 namespace Generator
 {
-    public partial struct ExampleSturct : ILwSerializable, IDisposable
+    public partial struct ExampleStruct : ILwSerializable, IDisposable
     {
         private Vector2 _direction;
         private float _speed;
@@ -43,7 +43,8 @@ namespace Generator
 
         public void Dispose()
         {
-            
+            nativeArr.Dispose();
+            refInt.Dispose();
         }
     }
 }

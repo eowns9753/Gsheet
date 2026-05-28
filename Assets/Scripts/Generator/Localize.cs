@@ -1,9 +1,9 @@
 using System;
 using LWSerializer;
 
-namespace SheetData.Generator
+namespace Generator
 {
-    public partial class Localize : ILwSerializable
+    public partial class Localize : ILwSerializable, IDisposable
     {
         private string _EN;
         private string _KR;
@@ -33,6 +33,10 @@ namespace SheetData.Generator
             reader.Read(out _JP);
             reader.Read(out _CN);
             reader.Read(out _TW);
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

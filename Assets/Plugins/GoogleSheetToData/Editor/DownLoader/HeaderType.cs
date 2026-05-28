@@ -2,6 +2,7 @@
 using System.Linq;
 using LWSerializer;
 using SheetData.Editor.Generator;
+using Unity.Collections;
 
 namespace SheetData.Editor.DownLoader
 {
@@ -20,6 +21,7 @@ namespace SheetData.Editor.DownLoader
         public bool IsMissingType { get; private set; }
         public bool IsLwSerializable { get; private set; }
         public bool IsArray => typeString.Contains("[]");
+        public bool IsDisposable { get; private set; }
 
         public HeaderType(string headerText)
         {
@@ -48,6 +50,7 @@ namespace SheetData.Editor.DownLoader
             {
                 IsUnmanaged = TypeFinder.IsUnmanaged(type);
                 IsLwSerializable = LwSerializableType.IsAssignableFrom(type);
+                IsDisposable = typeof(IDisposable).IsAssignableFrom(type);
             }
             
         }

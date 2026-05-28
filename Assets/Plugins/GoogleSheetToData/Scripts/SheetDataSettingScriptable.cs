@@ -21,19 +21,18 @@ namespace SheetData
         public const string FileName = "GsheetSetting";
         public const string BinaryFileName = "GsheetData";
         
-        [SerializeField] private string _codeGeneratorPos = "Scripts/Generator";
-        [SerializeField] private string _generatorNameSpace = "SheetData.Generator";
+        [SerializeField] private string _codeGenerationPath = "Scripts/Generator";
         [SerializeField] private string _sheetID = "1188AKPfAl2taqn6G-JDENJF-WeO_YA_gE4SRYzMRZBc";
         [SerializeField] private LocalizeSetting _localizeSetting;
         [Space(20), SerializeField] private List<SheetInfo> _sheetInfos = new List<SheetInfo>();
       
         private static SheetDataSettingScriptable _instance = null;
         public string SheetID => _sheetID;
-        public string GeneratorNameSpace => _generatorNameSpace;
-        public string CodeGeneratorPos => _codeGeneratorPos;
+        public string GeneratorNameSpace => _codeGenerationPath.Replace("Scripts/", "").Replace("/", ".");//_generatorNameSpace;
+        public string CodeGenerationPath => _codeGenerationPath;
         public List<SheetInfo> SheetInfos => _sheetInfos;
         public LocalizeSetting LocalizeSetting => _localizeSetting;
-        public Action GsheetUnLoadFunc { get; set; }
+        public Action GsheetReLoadFunc { get; set; }
 
         public static SheetDataSettingScriptable Instance
         {
@@ -54,14 +53,8 @@ namespace SheetData
 
         public virtual void OnEndGenerator()
         {
-            _ = SlowRefresh();
-        }
-
-        async Task SlowRefresh()
-        {
-            await Task.Delay(2500);
             LocalizeSheetBinder.Initialize();
-            GsheetUnLoadFunc?.Invoke();
+            GsheetReLoadFunc?.Invoke();
             LocalizeManager.Instance.RefreshListener(RefreshMode.All);
         }
     }

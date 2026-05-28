@@ -29,8 +29,9 @@ namespace SheetData.Editor
         }
 
         /// <summary> 데이터를 생성하고 Gsheet 클래스를 생성합니다 </summary>
-        async void GenerateData(SheetDataSettingScriptable target)
+        async Task GenerateData(SheetDataSettingScriptable target)
         {
+            target.OnBeginGenerator();
             await RefreshSheetNames(target);
             
             List<SheetRawData> sheetDatas = new();
@@ -69,15 +70,16 @@ namespace SheetData.Editor
                 var generatorCode = modelMap[sheetData.SheetName].Generator();
                 if (generatorCode != "")
                 {
-                    string path = IOUtils.GetSystemPath($"{target.CodeGeneratorPos}/{sheetData.SheetName}.cs");
+                    string path = IOUtils.GetSystemPath($"{target.CodeGenerationPath}/{sheetData.SheetName}.cs");
                     IOUtils.SaveFile(path, Encoding.UTF8.GetBytes(generatorCode));
                 }
             }
             GSheetModel model = new GSheetModel(sheetDatas.ToArray(), target.GeneratorNameSpace);
-            IOUtils.SaveFile(IOUtils.GetSystemPath($"{target.CodeGeneratorPos}/{GSheetModel.NAME}.cs"), 
+            IOUtils.SaveFile(IOUtils.GetSystemPath($"{target.CodeGenerationPath}/{GSheetModel.NAME}.cs"), 
                 Encoding.UTF8.GetBytes(model.Generator()));
             EditorPrefs.SetString(LOG_KEY, $"BinarySize - {writerSize:N0} bytes, Updated - {DateTime.Now.ToString()}");
             AssetDatabase.Refresh();
+            target.OnEndGenerator();
         }
         
         /// <summary> 시트의 이름들을 갱신하고 Scriptable에 메타데이터로 등록합니다 </summary>
@@ -126,6 +128,7 @@ namespace SheetData.Editor
         
         public override void OnInspectorGUI()
         {
+            GUILayout.Label("GSheet Setting", EditorStyles.largeLabel);
             base.OnInspectorGUI();
             SheetDataSettingScriptable scriptable = (SheetDataSettingScriptable)target;
             if (scriptable == null)
@@ -141,9 +144,7 @@ namespace SheetData.Editor
             }
             if (GUILayout.Button("Generator"))
             {
-                scriptable.OnBeginGenerator();
-                GenerateData(scriptable);
-                scriptable.OnEndGenerator();
+                _ = GenerateData(scriptable);
             }
             GUILayout.EndHorizontal();
         }
@@ -153,7 +154,7 @@ namespace SheetData.Editor
         [MenuItem("Tools/Gsheet Info")]
         public static void ShowSetting()
         {
-            MyWrapperWindow.CreateWindow<MyWrapperWindow>().Show();
+            EditorWindow.CreateWindow<GsheetSettingWindow>().Show();
         }
 
         public static SheetDataSettingScriptable GetScriptable()
@@ -164,12 +165,12 @@ namespace SheetData.Editor
         }
     }
     
-    public class MyWrapperWindow : EditorWindow
+    public class GsheetSettingWindow : EditorWindow
     {
         public void CreateGUI()
         {
             var asset = SheetDataSettingScriptableEditor.GetScriptable();
-        
+            titleContent = new GUIContent(nameof(GsheetSettingWindow));
             // 래퍼 요소 생성: 이 한 줄로 인스펙터가 통째로 들어옵니다.
             InspectorElement inspector = new InspectorElement(asset);
             rootVisualElement.Add(inspector);

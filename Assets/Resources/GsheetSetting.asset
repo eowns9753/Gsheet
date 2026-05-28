@@ -12,8 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b465717a805451ab35b22a14cddef10, type: 3}
   m_Name: GsheetSetting
   m_EditorClassIdentifier: SheetData::SheetData.SheetDataSettingScriptable
-  _codeGeneratorPos: Scripts/Generator
-  _generatorNameSpace: SheetData.Generator
+  _codeGenerationPath: Scripts/Generator
   _sheetID: 1188AKPfAl2taqn6G-JDENJF-WeO_YA_gE4SRYzMRZBc
   _localizeSetting:
     _sheetName: Localize

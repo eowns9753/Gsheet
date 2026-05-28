@@ -35,6 +35,8 @@ namespace SheetData.Localize
                 else
                 {
                     var gsheetType = Type.GetType($"{gsheetData.GeneratorNameSpace}.Gsheet, {GeneratorAssemblyName}");
+                    if (gsheetType == null)
+                        return false;
                     _gsheetInstance = gsheetType.GetProperty("Instance").GetValue(null);
                     _gsheetLocalizeDictionaryField = gsheetType.GetProperty(gsheetData.LocalizeSetting.SheetName);
                     var localizeType = Type.GetType($"{gsheetData.GeneratorNameSpace}.{gsheetData.LocalizeSetting.SheetName}, {GeneratorAssemblyName}");

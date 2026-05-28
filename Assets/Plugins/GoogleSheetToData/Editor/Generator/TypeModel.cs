@@ -65,7 +65,7 @@ using {{ us }};
 
 namespace {{ namespace_name }}
 {
-    public partial {{ type_keyword }} {{ type_name }} : ILwSerializable
+    public partial {{ type_keyword }} {{ type_name }} : ILwSerializable, IDisposable
     {
         {{~ for prop in members ~}}
         private {{ prop.type }} _{{ prop.name }};
@@ -86,6 +86,15 @@ namespace {{ namespace_name }}
         {
             {{~ for prop in members ~}}
             reader.Read(out _{{ prop.name }});
+            {{~ end ~}}
+        }
+
+        public void Dispose()
+        {
+            {{~ for prop in members ~}}
+            {{~ if prop.header_type.is_disposable ~}}
+            {{ prop.name }}.Dispose();
+            {{~ end ~}}
             {{~ end ~}}
         }
     }

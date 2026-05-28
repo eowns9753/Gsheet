@@ -2,9 +2,9 @@ using System;
 using Examples;
 using LWSerializer;
 
-namespace SheetData.Generator
+namespace Generator
 {
-    public partial class ExampleClass : ILwSerializable
+    public partial class ExampleClass : ILwSerializable, IDisposable
     {
         private string _localizeName;
         private float _time;
@@ -34,6 +34,10 @@ namespace SheetData.Generator
             reader.Read(out _property);
             reader.Read(out _arr);
             reader.Read(out _properties);
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

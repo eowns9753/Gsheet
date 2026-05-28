@@ -3,9 +3,9 @@ using UnityEngine;
 using Examples;
 using LWSerializer;
 
-namespace SheetData.Generator
+namespace Generator
 {
-    public partial class CustomTypes : ILwSerializable
+    public partial class CustomTypes : ILwSerializable, IDisposable
     {
         private Color _color;
         private float _time;
@@ -35,6 +35,10 @@ namespace SheetData.Generator
             reader.Read(out _c_struct);
             reader.Read(out _c_class);
             reader.Read(out _cs_class);
+        }
+
+        public void Dispose()
+        {
         }
     }
 }
