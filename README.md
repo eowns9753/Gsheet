@@ -283,13 +283,8 @@ public class MyTargetTypeFormatter : IParserFormatter
 
 ## 예제 시트
 
-프로젝트 기본 설정은 아래 Google Sheet ID를 사용합니다.
 
-```text
-1188AKPfAl2taqn6G-JDENJF-WeO_YA_gE4SRYzMRZBc
-```
-
-브라우저 URL:
+프로젝트 기본 설정은 아래 예제용 Google Sheet 가 설정되어있습니다
 
 ```text
 https://docs.google.com/spreadsheets/d/1188AKPfAl2taqn6G-JDENJF-WeO_YA_gE4SRYzMRZBc/edit
