@@ -1,8 +1,12 @@
 # GoogleSheetToData
 
-GoogleSheetToData는 Google Sheets에 작성한 기획 데이터를 Unity에서 바로 사용할 수 있는 C# 타입과 바이너리 데이터로 변환하는 에디터 플러그인입니다.
+GoogleSheetToData는 Google Sheets에 작성한 기획 데이터를 Unity에서 바로 사용할 수 있는 C# 타입과 바이너리 데이터로 변환하는 플러그인입니다.
+구글시트에서 작업한 데이터는 에디터와 런타임 모두 사용가능합니다
 
-시트의 헤더에 타입과 변수명을 적어두면, 플러그인이 Google Sheet를 CSV로 다운로드하고 Scriban 템플릿을 통해 `class` 또는 `struct` 코드를 생성합니다. 변환된 실제 데이터는 LWSerializer 기반의 바이너리 파일로 저장되며, 런타임에서는 생성된 `Gsheet` 싱글톤을 통해 `List<T>` 또는 `Dictionary<string, T>` 형태로 읽어 사용할 수 있습니다.
+시트의 헤더에 타입과 변수명을 적어두면, 플러그인이 Google Sheet를 CSV로 다운로드하고 Scriban 템플릿을 통해 `class` 또는 `struct` 코드를 생성합니다.
+변환된 실제 데이터는 LWSerializer 기반의 바이너리 파일로 저장되며, 런타임에서는 생성된 `Gsheet` 싱글톤을 통해 `List<T>` 또는 `Dictionary<string, T>` 형태로 읽어 사용할 수 있습니다.
+TextMeshProLocalizeUGUI, LocalizeString 타입을 사용해 로컬라이징기능도 함께 사용할 수 있습니다.
+
 
 ## 주요 기능
 
@@ -15,28 +19,6 @@ GoogleSheetToData는 Google Sheets에 작성한 기획 데이터를 Unity에서 
 - enum, 배열, Unity 타입, NativeContainer, 커스텀 타입 파싱 지원
 - 로컬라이징 시트 기반 `LocalizeString`, `LocalizeManager`, TMP 텍스트 갱신 지원
 - 생성 전후 데이터 차이를 확인할 수 있는 Diff Viewer 제공
-
-## 프로젝트 구성
-
-```text
-Assets/
-  Plugins/GoogleSheetToData/
-    Editor/
-      DownLoader/        Google Sheet 다운로드 및 CSV 원본 처리
-      Generator/         시트 타입과 Gsheet 코드 생성
-      Parsing/Formatter/ 문자열 데이터를 실제 타입으로 변환하는 포매터
-      DiffView/          생성 전후 데이터 비교 창
-    Scripts/
-      IO/                바이너리 읽기/쓰기와 SheetInfo
-      Localize/          로컬라이징 런타임
-      SheetDataSettingScriptable.cs
-  Resources/
-    GsheetSetting.asset  GoogleSheetToData 설정 에셋
-    GsheetData.bytes     생성된 시트 바이너리 데이터
-  Scripts/Generator/
-    GSheet.cs            자동 생성된 전체 접근 클래스
-    *.cs                 시트별 자동 생성 타입
-```
 
 ## 동작 흐름
 
@@ -67,25 +49,12 @@ Assets/
 ## Google Sheet 작성 규칙
 
 ### 1. A1 셀에 타입 키워드 작성
-
 각 시트의 A1 셀에는 생성할 타입 종류를 적습니다.
-
-```text
-class
-```
-
-또는
-
-```text
-struct
-```
-
 이 값은 생성되는 시트 타입의 `class` / `struct` 키워드로 사용됩니다.
 
+
 ### 2. 첫 행에 타입과 변수명 작성
-
 첫 행의 각 컬럼에는 다음 형식으로 필드를 선언합니다.
-
 ```text
 타입 변수명
 ```
@@ -324,4 +293,9 @@ public class MyTargetTypeFormatter : IParserFormatter
 
 ```text
 https://docs.google.com/spreadsheets/d/1188AKPfAl2taqn6G-JDENJF-WeO_YA_gE4SRYzMRZBc/edit
+```
+
+유니티 PackageManager 사용시 URL
+```text
+https://github.com/eowns9753/Gsheet.git?path=Assets/Plugins/GSheet
 ```
