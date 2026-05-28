@@ -23,26 +23,29 @@ namespace SheetData.Editor
         public const string LOG_KEY = "GSHEETLOGKEY";
         
         #region EditorFunc
-        [MenuItem(MENU_ITEM_PATH+"Setting")]
-        public static void Menu_ShowSetting()
-        {
-            EditorWindow.CreateWindow<GsheetSettingWindow>().Show();
-        }
-        [MenuItem(MENU_ITEM_PATH+"LogAndDiff")]
-        public static void Menu_LogAndDiff()
-        {
-            EditorWindow.GetWindow<DiffViewerWindow>().Show();
-        }
-        [MenuItem(MENU_ITEM_PATH+"Generate")]
+        [MenuItem(MENU_ITEM_PATH+"Generate", priority = -1)]
         public static void Menu_Generate()
         {
             _ = GsheetGenerator.Run(SheetDataSettingScriptable.Instance);
         }
-        [MenuItem(MENU_ITEM_PATH+"OpenSheet")]
+        
+        [MenuItem(MENU_ITEM_PATH+"View GoogleSheet", priority = 0)]
         public static void Menu_OpenSheet()
         {
             Application.OpenURL($"https://docs.google.com/spreadsheets/d/{SheetDataSettingScriptable.Instance.SheetID}/edit");
         }
+        
+        [MenuItem(MENU_ITEM_PATH+"View Setting")]
+        public static void Menu_ShowSetting()
+        {
+            EditorWindow.CreateWindow<GsheetSettingWindow>().Show();
+        }
+        [MenuItem(MENU_ITEM_PATH+"View Log-Diff")]
+        public static void Menu_LogAndDiff()
+        {
+            EditorWindow.GetWindow<DiffViewerWindow>().Show();
+        }
+       
         [UnityEditor.Callbacks.DidReloadScripts]
         private static void OnScriptsReloaded()
         {

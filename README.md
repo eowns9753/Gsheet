@@ -1,0 +1,327 @@
+# GoogleSheetToData
+
+GoogleSheetToData는 Google Sheets에 작성한 기획 데이터를 Unity에서 바로 사용할 수 있는 C# 타입과 바이너리 데이터로 변환하는 에디터 플러그인입니다.
+
+시트의 헤더에 타입과 변수명을 적어두면, 플러그인이 Google Sheet를 CSV로 다운로드하고 Scriban 템플릿을 통해 `class` 또는 `struct` 코드를 생성합니다. 변환된 실제 데이터는 LWSerializer 기반의 바이너리 파일로 저장되며, 런타임에서는 생성된 `Gsheet` 싱글톤을 통해 `List<T>` 또는 `Dictionary<string, T>` 형태로 읽어 사용할 수 있습니다.
+
+## 주요 기능
+
+- Google Sheet 데이터를 Unity 에디터에서 다운로드 및 변환
+- 시트별 `class` / `struct` 타입 자동 생성
+- `List<T>`와 `Dictionary<string, T>` 자동 구분
+- LWSerializer 기반 바이너리 저장 및 로드
+- Scriban 템플릿 기반 코드 생성
+- DOTS 계열 타입 지원
+- enum, 배열, Unity 타입, NativeContainer, 커스텀 타입 파싱 지원
+- 로컬라이징 시트 기반 `LocalizeString`, `LocalizeManager`, TMP 텍스트 갱신 지원
+- 생성 전후 데이터 차이를 확인할 수 있는 Diff Viewer 제공
+
+## 프로젝트 구성
+
+```text
+Assets/
+  Plugins/GoogleSheetToData/
+    Editor/
+      DownLoader/        Google Sheet 다운로드 및 CSV 원본 처리
+      Generator/         시트 타입과 Gsheet 코드 생성
+      Parsing/Formatter/ 문자열 데이터를 실제 타입으로 변환하는 포매터
+      DiffView/          생성 전후 데이터 비교 창
+    Scripts/
+      IO/                바이너리 읽기/쓰기와 SheetInfo
+      Localize/          로컬라이징 런타임
+      SheetDataSettingScriptable.cs
+  Resources/
+    GsheetSetting.asset  GoogleSheetToData 설정 에셋
+    GsheetData.bytes     생성된 시트 바이너리 데이터
+  Scripts/Generator/
+    GSheet.cs            자동 생성된 전체 접근 클래스
+    *.cs                 시트별 자동 생성 타입
+```
+
+## 동작 흐름
+
+1. `Assets/Resources/GsheetSetting.asset`에서 Google Sheet ID와 코드 생성 경로를 설정합니다.
+2. Unity 메뉴에서 `Tools/- Gsheet -/Generate`를 실행합니다.
+3. 플러그인이 Google Sheet의 각 시트 이름과 gid를 갱신합니다.
+4. 각 시트를 CSV로 다운로드합니다.
+5. 첫 행의 헤더를 읽어 타입 정보를 해석합니다.
+6. 시트 데이터를 `Assets/Resources/GsheetData.bytes`에 바이너리로 저장합니다.
+7. `Assets/Scripts/Generator` 아래에 시트별 타입과 `Gsheet.cs`를 생성합니다.
+8. 런타임에서는 `Gsheet` 싱글톤이 `Resources.Load<TextAsset>`로 바이너리를 읽고 데이터를 복원합니다.
+
+## 설정 방법
+
+설정 에셋은 기본적으로 `Assets/Resources/GsheetSetting.asset`에 있습니다. 에셋이 없으면 스크립트 리로드 시 `SheetDataSettingScriptableEditor`가 자동 생성합니다.
+
+주요 설정값은 다음과 같습니다.
+
+| 항목 | 설명 |
+| --- | --- |
+| `Code Generation Path` | 생성된 C# 코드가 저장될 경로입니다. 기본값은 `Scripts/Generator`입니다. |
+| `Sheet ID` | Google Spreadsheet URL의 `/d/{spreadsheetId}/` 부분입니다. |
+| `Localize Setting / Sheet Name` | 로컬라이징 데이터로 사용할 시트 이름입니다. 예: `Localize` |
+| `Localize Setting / Font Sets` | 언어별 TMP 폰트 매핑입니다. |
+
+설정 에셋의 `Code Generation Path`가 `Scripts/Generator`이면 생성 코드의 네임스페이스는 `Generator`가 됩니다.
+
+## Google Sheet 작성 규칙
+
+### 1. A1 셀에 타입 키워드 작성
+
+각 시트의 A1 셀에는 생성할 타입 종류를 적습니다.
+
+```text
+class
+```
+
+또는
+
+```text
+struct
+```
+
+이 값은 생성되는 시트 타입의 `class` / `struct` 키워드로 사용됩니다.
+
+### 2. 첫 행에 타입과 변수명 작성
+
+첫 행의 각 컬럼에는 다음 형식으로 필드를 선언합니다.
+
+```text
+타입 변수명
+```
+
+예시:
+
+```text
+string name
+int hp
+Vector3 position
+Color color
+int[] rewards
+```
+
+첫 번째 컬럼은 데이터 키로 사용될 수 있으므로, 실제 데이터 필드는 두 번째 컬럼부터 생성됩니다.
+
+### 3. 첫 번째 컬럼으로 List / Dictionary 구분
+
+데이터 행의 첫 번째 컬럼에 Key 값이 있으면 해당 시트는 `Dictionary<string, SheetType>`로 생성됩니다.
+
+```text
+class,string name,int hp
+unit_100,Soldier,100
+unit_101,Archer,70
+```
+
+생성 결과:
+
+```csharp
+public static Dictionary<string, Unit> Unit => Instance._Unit;
+```
+
+첫 번째 컬럼이 비어 있으면 해당 시트는 `List<SheetType>`로 생성됩니다.
+
+```text
+class,string name,int hp
+,Soldier,100
+,Archer,70
+```
+
+생성 결과:
+
+```csharp
+public static List<Unit> Unit => Instance._Unit;
+```
+
+### 4. 주석 행과 무시 컬럼
+
+- 행 전체가 `//`로 시작하면 주석 행으로 취급되어 무시됩니다.
+- 첫 행에서 컬럼 헤더가 `//`로 시작하면 해당 컬럼 전체가 무시됩니다.
+
+## 지원 타입
+
+기본 구현 기준으로 다음 타입을 사용할 수 있습니다.
+
+- C# primitive: `int`, `float`, `long`, `bool` 등
+- `string`
+- enum
+- 배열: `int[]`, `string[]` 등
+- Unity 타입: `Vector2`, `Vector3`, `Vector2Int`, `Vector3Int`, `Color`
+- DOTS / Unity.Collections 타입:
+  - `NativeArray<T>`
+  - `NativeReference<T>`
+  - `FixedString32Bytes`
+  - `FixedString64Bytes`
+  - `FixedString128Bytes`
+  - `FixedString512Bytes`
+  - `FixedString4096Bytes`
+- `IParserFormatter` 또는 `IGSheetParser`로 파싱 방법을 제공한 커스텀 타입
+- `ILwSerializable`로 바이너리 직렬화가 가능한 사용자 타입
+
+배열과 NativeArray는 내부 문자열을 `StringArray.Convert`로 분해해 각 원소 타입의 포매터로 다시 파싱합니다.
+
+## 생성 실행
+
+Unity 상단 메뉴에서 다음 항목을 사용할 수 있습니다.
+
+| 메뉴 | 설명 |
+| --- | --- |
+| `Tools/- Gsheet -/Generate` | Google Sheet 다운로드, 바이너리 저장, 코드 생성을 실행합니다. |
+| `Tools/- Gsheet -/View GoogleSheet` | 현재 설정된 Google Sheet를 브라우저로 엽니다. |
+| `Tools/- Gsheet -/View Setting` | `GsheetSetting` 인스펙터 창을 엽니다. |
+| `Tools/- Gsheet -/View Log-Diff` | 생성 전후 데이터 차이를 확인하는 Diff Viewer를 엽니다. |
+
+생성에 성공하면 다음 파일이 갱신됩니다.
+
+```text
+Assets/Resources/GsheetData.bytes
+Assets/Scripts/Generator/GSheet.cs
+Assets/Scripts/Generator/{SheetName}.cs
+```
+
+마지막 생성 정보는 `GsheetSetting` 인스펙터의 `LastUpdateInfo`에 표시됩니다.
+
+## 런타임 사용법
+
+생성된 데이터는 `Gsheet` 클래스의 static property로 접근합니다.
+
+```csharp
+using Generator;
+using UnityEngine;
+
+public class UnitSample : MonoBehaviour
+{
+    private void Start()
+    {
+        var unit = Gsheet.ExampleStruct[Gsheet.UNIT_100];
+        Debug.Log(unit.speed);
+
+        foreach (var item in Gsheet.ExampleClass)
+        {
+            Debug.Log(item.localizeName);
+        }
+    }
+}
+```
+
+`Gsheet.Instance`가 처음 접근될 때 `Resources/GsheetData.bytes`를 읽고 전체 시트 데이터를 복원합니다.
+
+Dictionary로 생성된 시트의 key는 `Gsheet` partial class에 상수로도 생성됩니다.
+
+```csharp
+Gsheet.UNIT_100
+Gsheet.UI_OK
+```
+
+## 로컬라이징 사용법
+
+`GsheetSetting.asset`의 `Localize Setting / Sheet Name`에 로컬라이징 시트 이름을 지정합니다. 현재 예제 설정은 `Localize` 시트를 사용합니다.
+
+로컬라이징 시트는 첫 번째 컬럼을 key로 사용하고, 이후 컬럼명을 언어 코드로 사용합니다.
+
+```text
+class,string EN,string KR,string JP
+ui_ok,OK,확인,確認
+ui_cancel,Cancel,취소,キャンセル
+```
+
+생성 시 `LangCode.cs`가 로컬라이징 시트의 언어 컬럼에 맞춰 갱신됩니다.
+
+코드에서 언어를 변경하려면 `LocalizeManager`를 사용합니다.
+
+```csharp
+using SheetData;
+using SheetData.Localize;
+
+LocalizeManager.Instance.SetLanguage(LangCode.KR);
+```
+
+문자열만 가져올 때는 다음처럼 사용할 수 있습니다.
+
+```csharp
+string text = LocalizeManager.Instance.Localize(Gsheet.UI_OK);
+```
+
+`TextMeshProLocalizeUGUI` 컴포넌트는 `LocalizeString` key를 가지고 있다가 언어가 변경되면 자동으로 텍스트와 폰트를 갱신합니다.
+
+## 커스텀 타입 파서
+
+시트 문자열을 직접 만든 타입으로 변환하려면 `IGSheetParser`를 구현합니다. `IGSheetParser`는 `IParserFormatter`와 `ILwSerializable`을 함께 요구하므로, 문자열 파싱과 바이너리 직렬화 방식을 모두 제공해야 합니다.
+
+```csharp
+using LWSerializer;
+using SheetData.IO;
+using SheetData.Scripts.Parsing;
+
+public class CustomClass : IGSheetParser
+{
+    private string _unitName;
+    private int _unitNumber;
+
+    public object ToData(string content)
+    {
+        var datas = StringArray.Convert(content);
+        return new CustomClass
+        {
+            _unitName = datas[0],
+            _unitNumber = int.Parse(datas[1])
+        };
+    }
+
+    public void Write(string content, SheetBinaryWriter writer)
+    {
+        writer.Write((CustomClass)ToData(content));
+    }
+
+    public void OnNativeWrite(LwBinaryWriter writer)
+    {
+        writer.Write(_unitName, _unitNumber);
+    }
+
+    public void OnNativeRead(LwBinaryReader reader)
+    {
+        reader.Read(out _unitName, out _unitNumber);
+    }
+}
+```
+
+파서 타입과 실제 대상 타입이 다를 경우에는 `ParserTriggerAttribute`를 사용할 수 있습니다.
+
+```csharp
+[ParserTrigger(typeof(MyTargetType))]
+public class MyTargetTypeFormatter : IParserFormatter
+{
+    public object ToData(string content)
+    {
+        // 문자열을 MyTargetType으로 변환
+    }
+
+    public void Write(string content, SheetBinaryWriter writer)
+    {
+        writer.Write((MyTargetType)ToData(content));
+    }
+}
+```
+
+## 주의사항
+
+- Google Sheet는 Unity 에디터에서 접근 가능한 공개 또는 권한 설정이 필요합니다.
+- 첫 행의 타입 이름은 프로젝트 내에서 `TypeFinder`가 찾을 수 있어야 합니다.
+- 헤더 타입을 찾지 못하면 생성 중 `Header {name} is missing type` 예외가 발생합니다.
+- 생성된 타입은 `ILwSerializable`과 `IDisposable`을 구현합니다.
+- `NativeArray<T>`, `NativeReference<T>`처럼 dispose가 필요한 필드는 생성 타입의 `Dispose()`에서 정리됩니다.
+- 생성 코드는 수동 수정하기보다 partial class를 별도 파일에 작성해 확장하는 방식이 안전합니다.
+- Google Sheet 내부 HTML을 분석해 시트 목록을 가져오는 부분은 Google 문서 구조 변경에 영향을 받을 수 있습니다. 문제가 생기면 `SheetInfo` 또는 다운로드 URL 처리 로직을 우회/보완해야 합니다.
+
+## 예제 시트
+
+프로젝트 기본 설정은 아래 Google Sheet ID를 사용합니다.
+
+```text
+1188AKPfAl2taqn6G-JDENJF-WeO_YA_gE4SRYzMRZBc
+```
+
+브라우저 URL:
+
+```text
+https://docs.google.com/spreadsheets/d/1188AKPfAl2taqn6G-JDENJF-WeO_YA_gE4SRYzMRZBc/edit
+```
