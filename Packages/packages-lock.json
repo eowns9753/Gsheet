@@ -1,12 +1,5 @@
 {
   "dependencies": {
-    "com.hoguma.lwserializer": {
-      "version": "https://github.com/hogumas/LWSerializer.git?path=src",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "e3d1c8792752b1fec26a5131f1f0e25f3cf90026"
-    },
     "com.unity.2d.animation": {
       "version": "13.0.4",
       "depth": 0,
