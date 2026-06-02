@@ -1,8 +1,9 @@
 {
   "name": "com.hoguma.gsheet",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "displayName": "Gsheet",
-  "description": "",
+  "description": "This is a plugin that converts planning data written in Google Sheets into C# types and binary data that can be used directly in Unity.
+The data worked on in Google Sheets can be used in both the editor and runtime. The downloaded data automatically generates types, and the values can be accessed via Gsheet.Instance.",
   "unity": "2021.3",
   "unityRelease": "0f1",
   "author": {
@@ -14,5 +15,8 @@
     "tools",
     "googleSheet",
     "Generator"
-  ]
+  ],
+"dependencies": {
+    "com.hogumas.lwserializer": "https://github.com/hogumas/LWSerializer.git?path=src"
+  }
 }

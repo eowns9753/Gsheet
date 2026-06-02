@@ -35,7 +35,7 @@ namespace SheetData.Editor
             Application.OpenURL($"https://docs.google.com/spreadsheets/d/{SheetDataSettingScriptable.Instance.SheetID}/edit");
         }
         
-        [MenuItem(MENU_ITEM_PATH+"View Setting")]
+        [MenuItem(MENU_ITEM_PATH+"GsheetSetting", priority = -2)]
         public static void Menu_ShowSetting()
         {
             EditorWindow.CreateWindow<GsheetSettingWindow>().Show();
