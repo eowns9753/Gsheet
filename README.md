@@ -95,6 +95,10 @@ public static List<Unit> Unit => Instance._Unit;
 - If an entire row starts with `//`, it is treated as a comment row and ignored.
 - If a column header in the first row starts with `//`, that entire column is ignored.
 
+### 5. ExampleImage
+<img width="1862" height="1031" alt="ex_2" src="https://github.com/user-attachments/assets/278672e9-3092-43d7-a5bd-f3b479d9cf19" />
+<img width="2013" height="941" alt="ex_1" src="https://github.com/user-attachments/assets/dce97536-d5c4-4560-947b-969f817bc0d2" />
+
 ## Supported Types
 
 The following types are available with the default implementation.
