@@ -1,8 +1,8 @@
 {
   "name": "com.hoguma.gsheet",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "displayName": "Gsheet",
-  "description": "This is a plugin that converts planning data written in Google Sheets into C# types and binary data that can be used directly in Unity.",
+  "description": "converts planning data written in Google Sheets into C# types and binary data that can be used directly in Unity.",
   "unity": "2021.3",
   "unityRelease": "0f1",
   "author": {
