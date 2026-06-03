@@ -1,4 +1,4 @@
-[English](README.md) | [한국어](README.ko.md) | [한국어](README.jp.md)
+[English](README.md) | [한국어](README.ko.md) | [日本語](README.jp.md)
 
 # GoogleSheetToData
 
