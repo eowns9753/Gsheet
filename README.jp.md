@@ -95,6 +95,11 @@ public static List<Unit> Unit => Instance._Unit;
 - 行全体が `//` で始まる場合、コメント行として扱われ無視されます。
 - 先頭行でカラムヘッダーが `//` で始まる場合、そのカラム全体が無視されます。
 
+### 5. ExampleImage
+<img width="1862" height="1031" alt="ex_2" src="https://github.com/user-attachments/assets/278672e9-3092-43d7-a5bd-f3b479d9cf19" />
+<img width="2013" height="941" alt="ex_1" src="https://github.com/user-attachments/assets/dce97536-d5c4-4560-947b-969f817bc0d2" />
+
+
 ## サポートされる型
 
 基本実装では以下の型を使用できます。
