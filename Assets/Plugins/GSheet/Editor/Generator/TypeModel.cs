@@ -96,7 +96,8 @@ namespace {{ namespace_name }}
         {
             {{~ for prop in members ~}}
             {{~ if prop.header_type.is_disposable ~}}
-            {{ prop.name }}.Dispose();
+            if({{ prop.name }}.IsCreated)
+                {{ prop.name }}.Dispose();
             {{~ end ~}}
             {{~ end ~}}
         }

@@ -44,8 +44,10 @@ namespace Generator
 
         public void Dispose()
         {
-            nativeArr.Dispose();
-            refInt.Dispose();
+            if(nativeArr.IsCreated)
+                nativeArr.Dispose();
+            if(refInt.IsCreated)
+                refInt.Dispose();
         }
     }
 }

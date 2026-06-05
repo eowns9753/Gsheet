@@ -19,71 +19,86 @@ namespace SheetData.Editor.Generator
         /// <summary> 데이터를 생성하고 Gsheet 클래스를 생성합니다 </summary>
         public static async Task Run(SheetDataSettingScriptable target)
         {
-            var beforeGsheetData = GsheetDiffHelper.Capture(SheetDataSettingScriptable.Instance.FindGSheetInstance());
-            target.OnBeginGenerator();
-            await RefreshSheetNames(target);
-            
-            List<SheetRawData> sheetDatas = new();
-            for (int i = 0; i < target.SheetInfos.Count; i++)
+            try
             {
-                var raw = await SheetLoader.Load(target.SheetID, target.SheetInfos[i]);
-                sheetDatas.Add(raw);
-                foreach (var header in raw.Headers)
+                var beforeGsheetData =
+                    GsheetDiffHelper.Capture(SheetDataSettingScriptable.Instance.FindGSheetInstance());
+                target.OnBeginGenerator();
+                bool successRefresh = await RefreshSheetNames(target);
+                if (!successRefresh)
+                    throw new Exception("sheet does not exist. Please check the URL");
+                List<SheetRawData> sheetDatas = new();
+                for (int i = 0; i < target.SheetInfos.Count; i++)
                 {
-                    if(header.IsMissingType)
-                        throw new Exception($"Header {header.originalText} is missing type");
-                }        
-            }
-
-            Dictionary<string, TypeModel> modelMap = new Dictionary<string, TypeModel>();
-            SheetBinaryWriter writer = SheetBinaryWriter.Create($"Resources/{SheetDataSettingScriptable.BinaryFileName}.bytes");
-            writer.Write(sheetDatas.Count);
-            foreach (var sheetData in sheetDatas)
-            {
-                modelMap.Add(sheetData.SheetName, sheetData.ClassGenerator(target.GeneratorNameSpace));
-                sheetData.WriteDirect(writer, modelMap[sheetData.SheetName]);
-                if (sheetData.SheetName == target.LocalizeSetting.SheetName)
-                {
-                    target.LocalizeSetting.LanguageCodes = sheetData.Headers.Skip(1).Select(o => o.memberName).ToArray();
-                    CreateLocalizeEnums(target);
+                    var raw = await SheetLoader.Load(target.SheetID, target.SheetInfos[i]);
+                    sheetDatas.Add(raw);
+                    foreach (var header in raw.Headers)
+                    {
+                        if (header.IsMissingType)
+                            throw new Exception($"Header '{header.originalText}' is missing type");
+                    }
                 }
-            }
 
-            int writerSize = writer.Length;
-            Debug.Log($"size {writerSize}");
-            writer.Save();
-            writer.Dispose();
-            
-            foreach (var sheetData in sheetDatas)
-            {
-                var generatorCode = modelMap[sheetData.SheetName].Generator();
-                if (generatorCode != "")
+                Dictionary<string, TypeModel> modelMap = new Dictionary<string, TypeModel>();
+                SheetBinaryWriter writer =
+                    SheetBinaryWriter.Create($"Resources/{SheetDataSettingScriptable.BinaryFileName}.bytes");
+                writer.Write(sheetDatas.Count);
+                foreach (var sheetData in sheetDatas)
                 {
-                    string path = IOUtils.GetSystemPath($"{target.CodeGenerationPath}/{sheetData.SheetName}.cs");
-                    IOUtils.SaveFile(path, Encoding.UTF8.GetBytes(generatorCode));
+                    modelMap.Add(sheetData.SheetName, sheetData.ClassGenerator(target.GeneratorNameSpace));
+                    sheetData.WriteDirect(writer, modelMap[sheetData.SheetName]);
+                    if (sheetData.SheetName == target.LocalizeSetting.SheetName)
+                    {
+                        target.LocalizeSetting.LanguageCodes =
+                            sheetData.Headers.Skip(1).Select(o => o.memberName).ToArray();
+                        CreateLocalizeEnums(target);
+                    }
                 }
+
+                int writerSize = writer.Length;
+                Debug.Log($"size {writerSize}");
+                writer.Save();
+                writer.Dispose();
+
+                foreach (var sheetData in sheetDatas)
+                {
+                    var generatorCode = modelMap[sheetData.SheetName].Generator();
+                    if (generatorCode != "")
+                    {
+                        string path = IOUtils.GetSystemPath($"{target.CodeGenerationPath}/{sheetData.SheetName}.cs");
+                        IOUtils.SaveFile(path, Encoding.UTF8.GetBytes(generatorCode));
+                    }
+                }
+
+                GSheetModel model = new GSheetModel(sheetDatas.ToArray(), target.GeneratorNameSpace);
+                IOUtils.SaveFile(IOUtils.GetSystemPath($"{target.CodeGenerationPath}/{GSheetModel.NAME}.cs"),
+                    Encoding.UTF8.GetBytes(model.Generator()));
+                EditorPrefs.SetString(SheetDataSettingScriptableEditor.LOG_KEY,
+                    $"BinarySize - {writerSize:N0} bytes, Updated - {DateTime.Now.ToString()}");
+                AssetDatabase.Refresh();
+                target.OnEndGenerator();
+
+                var win = EditorWindow.GetWindow<DiffViewerWindow>();
+                win.Refresh(beforeGsheetData);
             }
-            GSheetModel model = new GSheetModel(sheetDatas.ToArray(), target.GeneratorNameSpace);
-            IOUtils.SaveFile(IOUtils.GetSystemPath($"{target.CodeGenerationPath}/{GSheetModel.NAME}.cs"), 
-                Encoding.UTF8.GetBytes(model.Generator()));
-            EditorPrefs.SetString(SheetDataSettingScriptableEditor.LOG_KEY, $"BinarySize - {writerSize:N0} bytes, Updated - {DateTime.Now.ToString()}");
-            AssetDatabase.Refresh();
-            target.OnEndGenerator();
-            
-            var win = EditorWindow.GetWindow<DiffViewerWindow>();
-            win.Refresh(beforeGsheetData);
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
         }
-        
+
         /// <summary> 시트의 이름들을 갱신하고 Scriptable에 메타데이터로 등록합니다 </summary>
-        static async Task RefreshSheetNames(SheetDataSettingScriptable target)
+        static async Task<bool> RefreshSheetNames(SheetDataSettingScriptable target)
         {
+            target.SheetInfos.Clear();
             var names = await SheetLoader.GetSheetNames(target.SheetID);
             if (names.Count > 0)
             {
-                target.SheetInfos.Clear();
                 target.SheetInfos.AddRange(names);
                 EditorUtility.SetDirty(target);
+                return true;
             }
+            return false;
         }
         
         /// <summary> 지정된 Localize Sheet를 참조해 번역대상 언어코드를 생성합니다. </summary>

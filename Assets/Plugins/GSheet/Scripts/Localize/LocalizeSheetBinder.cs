@@ -46,7 +46,7 @@ namespace SheetData.Localize
                     }
                 }
             }
-            return _gsheetInstance != null;
+            return _gsheetInstance != null && _gsheetLocalizeDictionaryField != null;
         }
         
         public static string GetLocalizeString(LangCode lang, string key)

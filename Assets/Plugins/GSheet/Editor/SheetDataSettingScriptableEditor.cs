@@ -74,6 +74,7 @@ namespace SheetData.Editor
             if (GUILayout.Button("Generator"))
                 _ = GsheetGenerator.Run(scriptable);
             GUILayout.EndHorizontal();
+            scriptable.OnInspectorGUI();
         }
 
         public static SheetDataSettingScriptable GetScriptable()

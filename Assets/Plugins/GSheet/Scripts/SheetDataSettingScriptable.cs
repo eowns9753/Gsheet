@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Localize.Elements;
 using SheetData.IO;
@@ -21,6 +22,7 @@ namespace SheetData
         public const string GeneratorAssemblyName = "Assembly-CSharp";
         public const string FileName = "GsheetSetting";
         public const string BinaryFileName = "GsheetData";
+        private readonly Regex SheetIdRegex = new Regex(@"/d/([a-zA-Z0-9-_]+)", RegexOptions.Compiled);
         
         [SerializeField] private string _codeGenerationPath = "Scripts/Generator";
         [SerializeField] private string _sheetID = "1188AKPfAl2taqn6G-JDENJF-WeO_YA_gE4SRYzMRZBc";
@@ -48,7 +50,6 @@ namespace SheetData
                 return _instance;
             }
         }
-
         
         public object FindGSheetInstance()
         {
@@ -67,6 +68,22 @@ namespace SheetData
             LocalizeSheetBinder.Initialize();
             GsheetReLoadFunc?.Invoke();
             LocalizeManager.Instance.RefreshListener(RefreshMode.All);
+        }
+
+        public virtual void OnInspectorGUI()
+        {
+            _sheetID = ExtractSheetId(_sheetID);
+        }
+        
+        private string ExtractSheetId(string input)
+        {
+            input = input.Trim();
+            Match match = SheetIdRegex.Match(input);
+            if (match.Success)
+            {
+                return match.Groups[1].Value;
+            }
+            return input;
         }
     }
 }
