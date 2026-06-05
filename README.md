@@ -1,12 +1,12 @@
 [English](README.md) | [한국어](README.ko.md) | [日本語](README.jp.md)
 
-# GoogleSheetToData
+# GSheet (GoogleSheet to Data)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![.NET Standard 2.1](https://img.shields.io/badge/.NET%20Standard-2.1-orange)
 ![.NET](https://img.shields.io/badge/.NET-8.0%2B-blueviolet)
 
-GoogleSheetToData is a plugin that converts game design data written in Google Sheets into C# types and binary data ready for use in Unity.
+GSheet is a plugin that converts game design data written in Google Sheets into C# types and binary data ready for use in Unity.
 Data created in Google Sheets can be used in both the Editor and at runtime.
 Downloaded data automatically generates types, allowing you to access values via `Gsheet.Instance`.
 

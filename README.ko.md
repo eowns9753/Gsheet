@@ -1,12 +1,12 @@
 [English](README.md) | [한국어](README.ko.md) | [日本語](README.jp.md)
 
-# GoogleSheetToData
+# GSheet (GoogleSheet to Data)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![.NET Standard 2.1](https://img.shields.io/badge/.NET%20Standard-2.1-orange)
 ![.NET](https://img.shields.io/badge/.NET-8.0%2B-blueviolet)
 
-GoogleSheetToData는 Google Sheets에 작성한 기획 데이터를 Unity에서 바로 사용할 수 있는 C# 타입과 바이너리 데이터로 변환하는 플러그인입니다.
+GSheet는 Google Sheets에 작성한 기획 데이터를 Unity에서 바로 사용할 수 있는 C# 타입과 바이너리 데이터로 변환하는 플러그인입니다.
 구글시트에서 작업한 데이터는 에디터와 런타임 모두 사용가능합니다
 다운로드 된 데이터는 자동으로 타입을 생성시켜줘 Gsheet.Instance를 통해 값에 접근할 수 있습니다.
 

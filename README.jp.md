@@ -1,12 +1,12 @@
 [English](README.md) | [한국어](README.ko.md) | [日本語](README.jp.md)
 
-# GoogleSheetToData
+# GSheet (GoogleSheet to Data)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![.NET Standard 2.1](https://img.shields.io/badge/.NET%20Standard-2.1-orange)
 ![.NET](https://img.shields.io/badge/.NET-8.0%2B-blueviolet)
 
-GoogleSheetToData は、Google スプレッドシートで作成した企画データを Unity ですぐに使用できる C# 型とバイナリデータに変換するプラグインです。
+GSheet は、Google スプレッドシートで作成した企画データを Unity ですぐに使用できる C# 型とバイナリデータに変換するプラグインです。
 Google スプレッドシートで作業したデータはエディタとランタイムの両方で使用できます。
 ダウンロードされたデータは自動的に型を生成し、`Gsheet.Instance` を通じて値にアクセスできます。
 
